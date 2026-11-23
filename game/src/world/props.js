@@ -1,12 +1,12 @@
-// Sculpted curved tropical palm trees, neon streetlamps, stunt jump ramps, and yachts
-import { ROAD_X, ROAD_Z } from './roads.js';
+// Sculpted curved tropical palm trees, neon streetlamps, stunt ramps, yachts, & Palma Pier Ferris wheel
+import { ROAD_Z } from './roads.js';
 
 export function createPalmTreeMesh(THREE, scale = 1) {
   const palm = new THREE.Group();
   const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7c5333, roughness: 0.85 });
   const frondMat = new THREE.MeshStandardMaterial({
-    color: 0x26b36c,
-    emissive: 0x072918,
+    color: 0x26b86f,
+    emissive: 0x09301b,
     roughness: 0.45,
     side: THREE.DoubleSide,
   });
@@ -16,7 +16,7 @@ export function createPalmTreeMesh(THREE, scale = 1) {
   let curY = 0;
   let curX = 0;
   for (let i = 0; i < segments; i++) {
-    const segH = 1.6 * scale;
+    const segH = 1.65 * scale;
     const rBottom = (0.34 - i * 0.04) * scale;
     const rTop = (0.3 - i * 0.04) * scale;
     const seg = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBottom, segH, 7), trunkMat);
@@ -27,20 +27,24 @@ export function createPalmTreeMesh(THREE, scale = 1) {
     curX += i * 0.09 * scale;
   }
 
-  // Crown of 7 arched palm fronds
+  // Crown of 8 two-segment arching tapered palm fronds
   const crown = new THREE.Group();
   crown.position.set(curX, curY, 0);
-  for (let f = 0; f < 7; f++) {
-    const angle = (f / 7) * Math.PI * 2;
-    const frond = new THREE.Mesh(new THREE.ConeGeometry(0.68 * scale, 3.6 * scale, 4), frondMat);
-    frond.rotation.z = Math.PI * 0.36;
-    frond.position.set(Math.cos(angle) * 1.4 * scale, -0.2 * scale, Math.sin(angle) * 1.4 * scale);
+  for (let f = 0; f < 8; f++) {
+    const angle = (f / 8) * Math.PI * 2;
     const holder = new THREE.Group();
     holder.rotation.y = angle;
-    const leaf = new THREE.Mesh(new THREE.BoxGeometry(3.2 * scale, 0.12 * scale, 0.75 * scale), frondMat);
-    leaf.position.set(1.5 * scale, -0.25 * scale, 0);
-    leaf.rotation.z = -0.32;
-    holder.add(leaf);
+
+    const innerLeaf = new THREE.Mesh(new THREE.ConeGeometry(0.45 * scale, 2.2 * scale, 4), frondMat);
+    innerLeaf.rotation.z = -Math.PI * 0.42;
+    innerLeaf.position.set(1.0 * scale, 0.1 * scale, 0);
+    holder.add(innerLeaf);
+
+    const outerLeaf = new THREE.Mesh(new THREE.ConeGeometry(0.38 * scale, 2.1 * scale, 4), frondMat);
+    outerLeaf.rotation.z = -Math.PI * 0.62;
+    outerLeaf.position.set(2.45 * scale, -0.45 * scale, 0);
+    holder.add(outerLeaf);
+
     crown.add(holder);
   }
   palm.add(crown);
@@ -53,42 +57,48 @@ export function buildWorldProps(scene) {
   const palmCrowns = [];
   const stuntRamps = [];
 
-  // Line Solana Strip (x=110) and Oceanfront Drive (x=220) with tropical palm trees & neon lamps
-  const palmAvenues = [110, 220, 0];
-  for (let a = 0; a < palmAvenues.length; a++) {
-    const ax = palmAvenues[a];
+  // Line Solana Strip (x=110), Oceanfront Drive (x=220), Beachfront (x=242), and Avenue 0 with tropical palms
+  const palmLines = [
+    { x: 110, sides: [-14.2, 14.2], lamps: true },
+    { x: 220, sides: [-14.2, 14.2], lamps: true },
+    { x: 246, sides: [0], lamps: false },
+    { x: 0, sides: [-14.2, 14.2], lamps: true },
+  ];
+
+  for (let a = 0; a < palmLines.length; a++) {
+    const line = palmLines[a];
     for (let z = -380; z <= 380; z += 26) {
-      // Skip intersections
       let nearIntersection = false;
       for (let j = 0; j < ROAD_Z.length; j++) {
         if (Math.abs(z - ROAD_Z[j]) < 16) nearIntersection = true;
       }
       if (nearIntersection) continue;
 
-      for (const side of [-14.2, 14.2]) {
-        const scale = 0.9 + ((Math.abs(z) % 5) * 0.08);
+      for (const side of line.sides) {
+        const scale = 0.95 + ((Math.abs(z) % 5) * 0.08);
         const palm = createPalmTreeMesh(THREE, scale);
-        palm.position.set(ax + side, 0, z);
+        palm.position.set(line.x + side, 0, z);
         palm.rotation.y = (z * 0.3) % (Math.PI * 2);
         group.add(palm);
         palmCrowns.push(palm);
       }
 
-      // Glowing Art-Deco neon streetlamp
-      const lampPole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.1, 0.14, 5.5, 6),
-        new THREE.MeshStandardMaterial({ color: 0x222c3c, metalness: 0.8 })
-      );
-      lampPole.position.set(ax + 12.8, 2.75, z + 11);
-      group.add(lampPole);
+      if (line.lamps) {
+        const lampPole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.14, 5.5, 6),
+          new THREE.MeshStandardMaterial({ color: 0x222c3c, metalness: 0.8 })
+        );
+        lampPole.position.set(line.x + 12.8, 2.75, z + 11);
+        group.add(lampPole);
 
-      const globeColor = ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff;
-      const globe = new THREE.Mesh(
-        new THREE.SphereGeometry(0.42, 8, 8),
-        new THREE.MeshBasicMaterial({ color: globeColor })
-      );
-      globe.position.set(ax + 12.8, 5.65, z + 11);
-      group.add(globe);
+        const globeColor = ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff;
+        const globe = new THREE.Mesh(
+          new THREE.SphereGeometry(0.4, 8, 8),
+          new THREE.MeshBasicMaterial({ color: globeColor })
+        );
+        globe.position.set(line.x + 12.8, 5.65, z + 11);
+        group.add(globe);
+      }
     }
   }
 
@@ -125,7 +135,7 @@ export function buildWorldProps(scene) {
   // Luxury coastal yachts moored off Coral Marina & Solana Beach
   const hullMat = new THREE.MeshStandardMaterial({ color: 0xf5f9ff, roughness: 0.2, metalness: 0.3 });
   const deckMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  for (let y = 0; y < 5; y++) {
+  for (let y = 0; y < 6; y++) {
     const yacht = new THREE.Group();
     const hull = new THREE.Mesh(new THREE.BoxGeometry(5.5, 2.2, 16), hullMat);
     hull.position.y = 0.9;
@@ -136,10 +146,32 @@ export function buildWorldProps(scene) {
     const trim = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.25, 8.8), deckMat);
     trim.position.set(0, 3.55, -1);
     yacht.add(trim);
-    yacht.position.set(315 + (y % 2) * 32, -0.2, -260 + y * 125);
+    yacht.position.set(310 + (y % 2) * 30, -0.1, -260 + y * 115);
     yacht.rotation.y = 0.18 * (y - 2);
     group.add(yacht);
   }
+
+  // Palma Pier Wooden Boardwalk & Glowing Neon Ferris Wheel landmark
+  const pierDeck = new THREE.Mesh(
+    new THREE.BoxGeometry(95, 0.8, 18),
+    new THREE.MeshStandardMaterial({ color: 0x5c3d28, roughness: 0.8 })
+  );
+  pierDeck.position.set(295, 1.1, 315);
+  group.add(pierDeck);
+
+  const ferrisRim = new THREE.Mesh(
+    new THREE.TorusGeometry(19, 0.75, 8, 32),
+    new THREE.MeshBasicMaterial({ color: 0xff4d79 })
+  );
+  ferrisRim.position.set(318, 22, 315);
+  group.add(ferrisRim);
+
+  const ferrisInner = new THREE.Mesh(
+    new THREE.TorusGeometry(12, 0.4, 8, 24),
+    new THREE.MeshBasicMaterial({ color: 0x00f0ff })
+  );
+  ferrisInner.position.set(318, 22, 315);
+  group.add(ferrisInner);
 
   scene.add(group);
   return {
@@ -150,6 +182,8 @@ export function buildWorldProps(scene) {
       for (let i = 0; i < palmCrowns.length; i++) {
         palmCrowns[i].rotation.z = sway * ((i % 2 === 0) ? 1 : -1);
       }
+      ferrisRim.rotation.z = time * 0.25;
+      ferrisInner.rotation.z = -time * 0.25;
     },
   };
 }

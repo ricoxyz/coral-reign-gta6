@@ -45,7 +45,7 @@ function bootCoralReign() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x2a1836, 0.0019);
+  scene.fog = new THREE.FogExp2(0x3a2042, 0.00135);
 
   const camera = new THREE.PerspectiveCamera(
     62,
@@ -75,10 +75,11 @@ function bootCoralReign() {
 
   events.on('action:hijack', () => {
     tryHijackOrExitVehicle(state, traffic.vehicles, soundEngine);
+    events.emit('ui:refresh');
   });
 
   const refreshOverlays = () => {
-    updateHUD(state, weaponsSys);
+    updateHUD(state, weaponsSys, camera);
     renderFullPauseMap(state, saveSystem);
     updateTitleScreen(state, saveSystem, events);
   };

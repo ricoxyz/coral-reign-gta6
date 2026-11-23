@@ -48,16 +48,17 @@ export const STORY_MISSIONS = [
   {
     id: 'm04',
     num: '04',
-    title: 'SUNSET GOLD CONVOY HEIST',
+    title: 'CORAL BULLION RUN',
     district: 'SOLANA STRIP',
-    medal: 'ACTIVE',
+    medal: 'G',
     rewardCash: 45000,
     rewardRespect: 1200,
     waypoint: { x: 110, z: -165 },
     stages: [
-      'Intercept the Dorada Armored Bullion Convoy on Solana Strip',
-      'Hijack the armored bullion transport & evade 4-Star Tactical Police along Solana Strip',
-      'Stash the gold shipment inside the Coral Marina warehouse',
+      'Intercept the Dorada Armored Convoy on Solana Strip',
+      'Hijack the bullion transport & evade tactical police',
+      'Stash the gold shipment at Coral Marina',
+      'Shake AIR-1 chopper under the causeway bridge',
     ],
   },
   {
@@ -65,27 +66,29 @@ export const STORY_MISSIONS = [
     num: '05',
     title: 'VIDRIO SKYLINE HACK',
     district: 'VIDRIO DOWNTOWN',
-    medal: 'OPEN',
+    medal: 'S',
     rewardCash: 55000,
     rewardRespect: 1500,
     waypoint: { x: -110, z: 0 },
     stages: [
       'Plant Valeria’s signal relay at Vidrio Tower plaza',
       'Defend the terminal against Palma SWAT breach teams',
+      'Download encrypted ledger keys',
       'Exfiltrate onto the coastal boulevard',
     ],
   },
   {
     id: 'm06',
     num: '06',
-    title: 'PALMA PIER SPEEDBOAT DROP',
+    title: 'PALMA PIER DROP',
     district: 'PALMA PIER',
-    medal: 'OPEN',
+    medal: 'B',
     rewardCash: 65000,
     rewardRespect: 1800,
     waypoint: { x: 220, z: 390 },
     stages: [
       'Race to Palma Pier boardwalk before sunset lock',
+      'Clear rival cartel lookouts on the boardwalk',
       'Secure the offshore syndicate drop crates',
       'Outrun AIR-1 spotlight along Oceanfront Drive',
     ],
@@ -93,16 +96,17 @@ export const STORY_MISSIONS = [
   {
     id: 'm07',
     num: '07',
-    title: 'MIRADOR VILLA AMBUSH',
-    district: 'MIRADOR HEIGHTS',
-    medal: 'OPEN',
+    title: 'SOLANA GOLD CONVOY',
+    district: 'SOLANA STRIP',
+    medal: 'ACTIVE',
     rewardCash: 80000,
     rewardRespect: 2200,
-    waypoint: { x: -330, z: 330 },
+    waypoint: { x: 110, z: -165 },
     stages: [
-      'Breach the hillside compound in Mirador Heights',
-      'Neutralize the rival lieutenant’s armored convoy',
-      'Escape down the canyon switchbacks',
+      'Ambush the armored bullion convoy at Hotel Coral',
+      'Extract the syndicate gold payload with Valeria',
+      'Break the TAC-9 barricade & reach Coral Marina',
+      'Lose 4-Star pursuit across the Marina bridge',
     ],
   },
   {
@@ -180,10 +184,11 @@ export function initMissionSystem(scene, state, soundEngine) {
   scene.add(beaconGroup);
 
   function syncActiveMission() {
-    const m = STORY_MISSIONS[state.mission.currentIndex] || STORY_MISSIONS[3];
+    const m = STORY_MISSIONS[state.mission.currentIndex] || STORY_MISSIONS[6];
     state.mission.title = m.title;
     state.mission.rewardCash = m.rewardCash;
     state.mission.rewardRespect = m.rewardRespect;
+    state.mission.totalStages = m.stages.length;
     state.mission.objective = m.stages[state.mission.stageIndex] || m.stages[0];
     state.mission.waypoint = { ...m.waypoint };
     beaconGroup.position.set(m.waypoint.x, 0, m.waypoint.z);

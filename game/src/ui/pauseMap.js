@@ -1,4 +1,4 @@
-// Full-Screen Interactive City Map of Palma Dorada (6 Districts, 10 Missions, Races, Stunts, Shells, Save Slots)
+// Full-Screen 3-Column Pause Dashboard: Progression Ring, 6-District Map, Career Stats & 3 Save Slots
 import { DISTRICTS } from '../world/districts.js';
 import { ROAD_X, ROAD_Z } from '../world/roads.js';
 import { STORY_MISSIONS } from '../gameplay/missions.js';
@@ -15,26 +15,50 @@ export function renderFullPauseMap(state, saveSystem) {
     return;
   }
 
-  // Populate 10 Story Missions Grid with Medals (G / S / ACTIVE / OPEN)
+  // Left Column: Completion Ring & Breakdown
+  const pct = state.stats.completionPct;
+  const pctEl = document.getElementById('pause-completion-pct');
+  if (pctEl) pctEl.textContent = `${pct.toFixed(1)}%`;
+
+  const arcEl = document.getElementById('completion-ring-arc');
+  if (arcEl) {
+    const circ = 251.3;
+    arcEl.setAttribute('stroke-dashoffset', String((circ * (1 - pct / 100)).toFixed(1)));
+  }
+
+  const progMissions = document.getElementById('prog-missions');
+  const progRaces = document.getElementById('prog-races');
+  const progStunts = document.getElementById('prog-stunts');
+  const progShells = document.getElementById('prog-shells');
+  if (progMissions) progMissions.textContent = `${state.stats.missionsDone} / ${state.stats.missionsTotal}`;
+  if (progRaces) progRaces.textContent = `${state.stats.racesWon} / ${state.stats.racesTotal}`;
+  if (progStunts) progStunts.textContent = `${state.stats.stuntsCompleted} / ${state.stats.stuntsTotal}`;
+  if (progShells) progShells.textContent = `${state.stats.shellsCollected} / ${state.stats.shellsTotal}`;
+
+  // Mission Ratings (G / S / B / ACTIVE / OPEN)
   const mGrid = document.getElementById('pause-mission-grid');
   if (mGrid) {
-    mGrid.innerHTML = STORY_MISSIONS.map(
+    const mHtml = STORY_MISSIONS.map(
       (m) => `
       <div class="mission-item">
         <span>${m.num}. ${m.title}</span>
         <span class="medal ${m.medal}">${m.medal}</span>
       </div>`
     ).join('');
+    if (mGrid._lastHtml !== mHtml) {
+      mGrid._lastHtml = mHtml;
+      mGrid.innerHTML = mHtml;
+    }
   }
 
-  // Update Career Ledger Stats
-  const pctEl = document.getElementById('pause-completion-pct');
-  if (pctEl) pctEl.textContent = `${state.stats.completionPct}% COMPLETE`;
+  // Right Column: Career Stats & 3 Save Slots
+  const nwEl = document.getElementById('stat-networth');
+  const shEl = document.getElementById('stat-shells');
+  if (nwEl) nwEl.textContent = `$${state.player.cash.toLocaleString()}`;
+  if (shEl) shEl.textContent = `${state.stats.shellsCollected} / ${state.stats.shellsTotal}`;
+  saveSystem.renderSaveSlotsInto('pause-save-slots', 'pause');
 
-  // Populate 3 Save Slots
-  saveSystem.renderSaveSlotsInto('pause-save-slots');
-
-  // Render High-Contrast Interactive City Cartography Canvas
+  // Center Column: 6-District Palma Dorada City Cartography Canvas
   const canvas = document.getElementById('full-map-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -44,17 +68,16 @@ export function renderFullPauseMap(state, saveSystem) {
   ctx.fillStyle = '#071224';
   ctx.fillRect(0, 0, w, h);
 
-  // Coordinate transform: world X [-480..420], world Z [-540..560]
   const tx = (wx) => ((wx + 480) / 900) * w;
   const ty = (wz) => ((wz + 540) / 1100) * h;
 
-  // Draw Ocean & Golden Beach on East coast
-  ctx.fillStyle = '#052c47';
+  // Ocean & Golden Beach on East coast
+  ctx.fillStyle = '#053252';
   ctx.fillRect(tx(265), 0, w - tx(265), h);
   ctx.fillStyle = '#d8b47c';
   ctx.fillRect(tx(230), 0, tx(265) - tx(230), h);
 
-  // Draw 6 Colored District Zones & Labels
+  // 6 Colored District Zones & Labels
   for (let i = 0; i < DISTRICTS.length; i++) {
     const d = DISTRICTS[i];
     const b = d.bounds;
@@ -63,19 +86,19 @@ export function renderFullPauseMap(state, saveSystem) {
     const dw = tx(b.maxX) - x0;
     const dh = ty(b.maxZ) - y0;
 
-    ctx.fillStyle = `${d.color}22`;
+    ctx.fillStyle = `${d.color}24`;
     ctx.strokeStyle = d.color;
     ctx.lineWidth = 1.5;
     ctx.fillRect(x0, y0, dw, dh);
     ctx.strokeRect(x0, y0, dw, dh);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 12px "Segoe UI", sans-serif';
-    ctx.fillText(d.name, x0 + 8, y0 + 18);
+    ctx.font = '900 11px "Segoe UI", sans-serif';
+    ctx.fillText(d.name, x0 + 7, y0 + 16);
   }
 
-  // Draw Arterial Road Grid
-  ctx.strokeStyle = 'rgba(210, 228, 255, 0.35)';
+  // Arterial Road Grid
+  ctx.strokeStyle = 'rgba(215, 232, 255, 0.36)';
   ctx.lineWidth = 3;
   for (let i = 0; i < ROAD_X.length; i++) {
     const rx = tx(ROAD_X[i]);
@@ -92,7 +115,7 @@ export function renderFullPauseMap(state, saveSystem) {
     ctx.stroke();
   }
 
-  // Draw GPS Route Line from Player to Active Heist Waypoint
+  // GPS Route Line
   const px = tx(state.player.x);
   const py = ty(state.player.z);
   const wp = state.mission.waypoint;
@@ -109,26 +132,24 @@ export function renderFullPauseMap(state, saveSystem) {
     ctx.setLineDash([]);
   }
 
-  // Plot 24 Golden Shell Collectibles
+  // 24 Golden Shells
   const shells = state.entities.collectibles || [];
   for (let i = 0; i < shells.length; i++) {
     const s = shells[i];
     ctx.fillStyle = s.collected ? 'rgba(255, 209, 102, 0.35)' : '#ffd166';
     ctx.beginPath();
-    ctx.arc(tx(s.x), ty(s.z), 3.5, 0, Math.PI * 2);
+    ctx.arc(tx(s.x), ty(s.z), 3.2, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Plot 5 Street Races (Cyan Diamonds)
+  // 5 Street Races
   for (let i = 0; i < STREET_RACES.length; i++) {
     const r = STREET_RACES[i];
-    const rx = tx(r.x);
-    const ry = ty(r.z);
     ctx.fillStyle = '#00f0ff';
-    ctx.fillRect(rx - 4, ry - 4, 8, 8);
+    ctx.fillRect(tx(r.x) - 4, ty(r.z) - 4, 8, 8);
   }
 
-  // Plot 10 Story Heist Icons (Gold Circles with numbers)
+  // 10 Story Heists
   for (let i = 0; i < STORY_MISSIONS.length; i++) {
     const m = STORY_MISSIONS[i];
     const mx = tx(m.waypoint.x);
@@ -139,10 +160,10 @@ export function renderFullPauseMap(state, saveSystem) {
     ctx.fill();
     ctx.fillStyle = '#050c18';
     ctx.font = '900 9px "Segoe UI", sans-serif';
-    ctx.fillText(m.num, mx - 5, my + 3);
+    ctx.fillText(m.num, mx - 5.5, my + 3);
   }
 
-  // Plot Player Marker
+  // Player Marker
   ctx.fillStyle = '#4eff91';
   ctx.beginPath();
   ctx.arc(px, py, 7, 0, Math.PI * 2);

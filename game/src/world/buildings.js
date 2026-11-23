@@ -1,4 +1,4 @@
-// Art-Deco hotels, neon casinos, stepped financial skyscrapers, and rooftop helipads
+// Art-Deco hotels, neon casinos, stepped financial skyscrapers, oceanfront resorts & rooftop helipads
 import { getDistrictAt } from './districts.js';
 import { ROAD_X, ROAD_Z } from './roads.js';
 
@@ -13,24 +13,27 @@ function createWindowFacadeTexture(baseHex, neonHex) {
   canvas.height = 256;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = baseHex;
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 256);
+  bgGrad.addColorStop(0, baseHex);
+  bgGrad.addColorStop(1, '#121829');
+  ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, 128, 256);
 
   // Art-Deco vertical pilasters
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.fillStyle = 'rgba(255, 224, 180, 0.14)';
   ctx.fillRect(6, 0, 8, 256);
   ctx.fillRect(58, 0, 12, 256);
   ctx.fillRect(114, 0, 8, 256);
 
-  // Illuminated windows grid
+  // Illuminated windows grid with warm sunset/neon reflections
   for (let y = 14; y < 242; y += 16) {
     for (let x = 18; x < 106; x += 20) {
       if (x === 58) continue;
       const lit = ((x * 13 + y * 7) % 11) > 2;
       if (lit) {
-        ctx.fillStyle = ((x + y) % 3 === 0) ? neonHex : '#ffe8a3';
+        ctx.fillStyle = ((x + y) % 4 === 0) ? neonHex : '#ffdf9a';
       } else {
-        ctx.fillStyle = '#101829';
+        ctx.fillStyle = '#18243d';
       }
       ctx.fillRect(x, y, 12, 10);
     }
@@ -38,7 +41,7 @@ function createWindowFacadeTexture(baseHex, neonHex) {
 
   // Horizontal neon trim band
   ctx.fillStyle = neonHex;
-  ctx.fillRect(0, 24, 128, 4);
+  ctx.fillRect(0, 20, 128, 4);
   ctx.fillRect(0, 232, 128, 5);
 
   const tex = new window.THREE.CanvasTexture(canvas);
@@ -73,11 +76,11 @@ export function buildCityBuildings(scene, rng) {
   const colliders = [];
 
   const facadePresets = [
-    createWindowFacadeTexture('#212a42', '#ff4d79'),
-    createWindowFacadeTexture('#1a3047', '#00f0ff'),
-    createWindowFacadeTexture('#382644', '#ffbf3c'),
-    createWindowFacadeTexture('#263849', '#4eff91'),
-    createWindowFacadeTexture('#442d35', '#ff7e29'),
+    createWindowFacadeTexture('#2a314c', '#ff4d79'),
+    createWindowFacadeTexture('#1d344f', '#00f0ff'),
+    createWindowFacadeTexture('#3e2948', '#ffbf3c'),
+    createWindowFacadeTexture('#2a3f50', '#4eff91'),
+    createWindowFacadeTexture('#4a2d3a', '#ff7e29'),
   ];
 
   let brandIdx = 0;
@@ -87,34 +90,43 @@ export function buildCityBuildings(scene, rng) {
       const centerX = (ROAD_X[ix] + ROAD_X[ix + 1]) * 0.5;
       const centerZ = (ROAD_Z[iz] + ROAD_Z[iz + 1]) * 0.5;
       const district = getDistrictAt(centerX, centerZ);
+      const isOceanfrontBlock = centerX > 140; // Open coastal resort strip between Solana Strip & Beach!
 
       // Sidewalk block platform
       const padGeo = new THREE.BoxGeometry(82, 0.35, 82);
-      const padMat = new THREE.MeshStandardMaterial({ color: 0x2c3242, roughness: 0.7 });
+      const padMat = new THREE.MeshStandardMaterial({
+        color: isOceanfrontBlock ? 0x3b4052 : 0x2c3242,
+        roughness: 0.7,
+      });
       const pad = new THREE.Mesh(padGeo, padMat);
       pad.position.set(centerX, 0.17, centerZ);
       group.add(pad);
 
-      // 2 to 4 sculpted stepped buildings per block
-      const subPositions = [
-        { dx: -20, dz: -20, w: 28, d: 28 },
-        { dx: 20, dz: -20, w: 26, d: 28 },
-        { dx: -20, dz: 20, w: 28, d: 26 },
-        { dx: 20, dz: 20, w: 28, d: 26 },
-      ];
+      // Oceanfront blocks have airy low-rise beach clubs & boutique Art-Deco hotels so sunset/ocean remain visible!
+      const subPositions = isOceanfrontBlock
+        ? [
+            { dx: -18, dz: -20, w: 22, d: 22 },
+            { dx: -18, dz: 20, w: 22, d: 22 },
+          ]
+        : [
+            { dx: -20, dz: -20, w: 28, d: 28 },
+            { dx: 20, dz: -20, w: 26, d: 28 },
+            { dx: -20, dz: 20, w: 28, d: 26 },
+            { dx: 20, dz: 20, w: 28, d: 26 },
+          ];
 
       for (let s = 0; s < subPositions.length; s++) {
         const sub = subPositions[s];
         const bx = centerX + sub.dx;
         const bz = centerZ + sub.dz;
-        const [minH, maxH] = district.heightRange;
+        const [minH, maxH] = isOceanfrontBlock ? [10, 22] : district.heightRange;
         const h = minH + rng() * (maxH - minH);
 
         const tex = facadePresets[(ix + iz + s) % facadePresets.length];
         const bMat = new THREE.MeshStandardMaterial({
           map: tex,
           roughness: 0.35,
-          metalness: 0.3,
+          metalness: 0.32,
         });
 
         // Base podium tier
@@ -123,12 +135,12 @@ export function buildCityBuildings(scene, rng) {
         group.add(baseMesh);
 
         // Art-Deco stepped upper tier
-        const midH = h * 0.32;
+        const midH = h * 0.34;
         const midMesh = new THREE.Mesh(new THREE.BoxGeometry(sub.w * 0.72, midH, sub.d * 0.72), bMat);
         midMesh.position.set(bx, h + midH * 0.5 + 0.35, bz);
         group.add(midMesh);
 
-        // Glowing neon crown band + spire
+        // Glowing neon crown band + Art-Deco spire
         const neonColor = (ix + iz + s) % 2 === 0 ? 0xff4d79 : 0x00f0ff;
         const crownMat = new THREE.MeshBasicMaterial({ color: neonColor });
         const crown = new THREE.Mesh(
@@ -138,8 +150,15 @@ export function buildCityBuildings(scene, rng) {
         crown.position.set(bx, h + midH + 0.5, bz);
         group.add(crown);
 
+        // Vertical neon corner strip on Solana Strip & Downtown towers
+        if (bx > 20 || h > 42) {
+          const strip = new THREE.Mesh(new THREE.BoxGeometry(0.65, h, 0.65), crownMat);
+          strip.position.set(bx + sub.w * 0.5, h * 0.5 + 0.35, bz + sub.d * 0.5);
+          group.add(strip);
+        }
+
         // Rooftop billboard on boulevard-facing buildings
-        if (s % 2 === 0 && (bx > 40 || Math.abs(bz) < 220)) {
+        if (s % 2 === 0 && (bx > 30 || Math.abs(bz) < 220)) {
           const brandName = HOTEL_BRANDS[brandIdx % HOTEL_BRANDS.length];
           brandIdx++;
           const signTex = createNeonSignTexture(
@@ -152,7 +171,7 @@ export function buildCityBuildings(scene, rng) {
             new THREE.MeshBasicMaterial({ map: signTex })
           );
           signMesh.position.set(bx, h + midH + 2.6, bz);
-          signMesh.rotation.y = bx > 60 ? Math.PI * 0.15 : 0;
+          signMesh.rotation.y = bx > 60 ? Math.PI * 0.25 : 0;
           group.add(signMesh);
         }
 
@@ -162,6 +181,17 @@ export function buildCityBuildings(scene, rng) {
           minZ: bz - sub.d * 0.5,
           maxZ: bz + sub.d * 0.5,
         });
+      }
+
+      // Add glowing resort pool courtyard on oceanfront blocks
+      if (isOceanfrontBlock) {
+        const pool = new THREE.Mesh(
+          new THREE.PlaneGeometry(24, 34),
+          new THREE.MeshBasicMaterial({ color: 0x00e5ff })
+        );
+        pool.rotation.x = -Math.PI / 2;
+        pool.position.set(centerX + 18, 0.38, centerZ);
+        group.add(pool);
       }
     }
   }

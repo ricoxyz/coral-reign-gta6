@@ -1,11 +1,11 @@
 // Cinematic 3D Title Screen Controller & Career Save Slot Selector
-export function updateTitleScreen(state, saveSystem, events) {
+export function updateTitleScreen(state, saveSystem) {
   const modal = document.getElementById('title-screen-modal');
   if (!modal) return;
 
   if (state.mode === 'title') {
     modal.classList.add('visible');
-    saveSystem.renderSaveSlotsInto('title-save-slots');
+    saveSystem.renderSaveSlotsInto('title-save-slots', 'title');
   } else {
     modal.classList.remove('visible');
   }
@@ -33,6 +33,14 @@ export function bindMenuButtons(state, saveSystem, events, soundEngine) {
     btnNew.addEventListener('click', () => {
       state.mission.currentIndex = 0;
       state.mission.stageIndex = 0;
+      resumeGame();
+    });
+  }
+
+  const btnLoad = document.getElementById('btn-load-game');
+  if (btnLoad) {
+    btnLoad.addEventListener('click', () => {
+      saveSystem.loadSlot(2);
       resumeGame();
     });
   }

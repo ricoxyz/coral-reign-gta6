@@ -1,4 +1,4 @@
-// Multi-lane sunset boulevards, crosswalks, causeway bridges, and glowing traffic signals
+// Multi-lane sunset boulevards with wet sheen, crosswalks, causeway arches, and traffic signals
 export const ROAD_X = [-330, -220, -110, 0, 110, 220];
 export const ROAD_Z = [-440, -330, -220, -110, 0, 110, 220, 330, 440];
 
@@ -6,44 +6,67 @@ export function buildRoadNetwork(scene) {
   const THREE = window.THREE;
   const group = new THREE.Group();
 
-  // Procedural asphalt + lane markings texture
+  // Procedural wet-asphalt + lane markings + warm sunset specular sheen texture
   const roadCanvas = document.createElement('canvas');
-  roadCanvas.width = 128;
-  roadCanvas.height = 128;
+  roadCanvas.width = 256;
+  roadCanvas.height = 256;
   const rctx = roadCanvas.getContext('2d');
-  rctx.fillStyle = '#1b1f2a';
-  rctx.fillRect(0, 0, 128, 128);
-  // Subtle wet road sheen strip
-  rctx.fillStyle = '#252b3b';
-  rctx.fillRect(18, 0, 92, 128);
-  // Double yellow center line
+  rctx.fillStyle = '#191e2b';
+  rctx.fillRect(0, 0, 256, 256);
+
+  // Wet tire-track sunset sheen bands
+  const wetGrad = rctx.createLinearGradient(0, 0, 256, 0);
+  wetGrad.addColorStop(0.0, '#1a1f2d');
+  wetGrad.addColorStop(0.28, '#282c42');
+  wetGrad.addColorStop(0.5, '#1d2231');
+  wetGrad.addColorStop(0.72, '#2d2942');
+  wetGrad.addColorStop(1.0, '#1a1f2d');
+  rctx.fillStyle = wetGrad;
+  rctx.fillRect(16, 0, 224, 256);
+
+  // Subtle wet puddle patches
+  rctx.fillStyle = 'rgba(255, 130, 96, 0.08)';
+  rctx.beginPath();
+  rctx.ellipse(80, 96, 22, 46, 0, 0, Math.PI * 2);
+  rctx.fill();
+  rctx.fillStyle = 'rgba(0, 224, 255, 0.07)';
+  rctx.beginPath();
+  rctx.ellipse(178, 190, 24, 52, 0, 0, Math.PI * 2);
+  rctx.fill();
+
+  // Double gold center divider
   rctx.fillStyle = '#ffbf3c';
-  rctx.fillRect(61, 0, 2, 128);
-  rctx.fillRect(65, 0, 2, 128);
+  rctx.fillRect(123, 0, 3, 256);
+  rctx.fillRect(130, 0, 3, 256);
+
   // White dashed lane dividers
-  rctx.fillStyle = 'rgba(230, 240, 255, 0.72)';
-  for (let y = 8; y < 128; y += 32) {
-    rctx.fillRect(32, y, 2, 16);
-    rctx.fillRect(94, y, 2, 16);
+  rctx.fillStyle = 'rgba(235, 244, 255, 0.78)';
+  for (let y = 12; y < 256; y += 64) {
+    rctx.fillRect(66, y, 4, 30);
+    rctx.fillRect(186, y, 4, 30);
   }
-  // Neon pink/cyan curb strips
+
+  // Crisp concrete edge + subtle neon coral/cyan gutter accent
+  rctx.fillStyle = '#384359';
+  rctx.fillRect(0, 0, 8, 256);
+  rctx.fillRect(248, 0, 8, 256);
   rctx.fillStyle = '#00d8ff';
-  rctx.fillRect(2, 0, 3, 128);
+  rctx.fillRect(8, 0, 3, 256);
   rctx.fillStyle = '#ff4d79';
-  rctx.fillRect(123, 0, 3, 128);
+  rctx.fillRect(245, 0, 3, 256);
 
   const roadTex = new THREE.CanvasTexture(roadCanvas);
   roadTex.wrapS = THREE.RepeatWrapping;
   roadTex.wrapT = THREE.RepeatWrapping;
-  roadTex.repeat.set(1, 45);
+  roadTex.repeat.set(1, 44);
 
   const roadMatNS = new THREE.MeshStandardMaterial({
     map: roadTex,
-    roughness: 0.32,
-    metalness: 0.42,
+    roughness: 0.9,
+    metalness: 0.04,
   });
 
-  // North-South Avenues (including x=110 Solana Strip & x=220 Oceanfront Drive)
+  // North-South Avenues (x=110 Solana Strip, x=220 Oceanfront Drive)
   for (let i = 0; i < ROAD_X.length; i++) {
     const rx = ROAD_X[i];
     const geo = new THREE.PlaneGeometry(24, 1100);
@@ -59,8 +82,8 @@ export function buildRoadNetwork(scene) {
   roadTexEW.repeat.set(1, 30);
   const roadMatEW = new THREE.MeshStandardMaterial({
     map: roadTexEW,
-    roughness: 0.34,
-    metalness: 0.38,
+    roughness: 0.9,
+    metalness: 0.04,
   });
 
   for (let j = 0; j < ROAD_Z.length; j++) {
@@ -73,10 +96,11 @@ export function buildRoadNetwork(scene) {
     group.add(mesh);
   }
 
-  // Intersection plazas + crosswalk stripes + traffic light gantries
+  // Intersection plazas + zebra crosswalks + traffic signal gantries
   const crossGeo = new THREE.BoxGeometry(24.5, 0.08, 24.5);
-  const crossMat = new THREE.MeshStandardMaterial({ color: 0x232836, roughness: 0.28, metalness: 0.45 });
+  const crossMat = new THREE.MeshStandardMaterial({ color: 0x222736, roughness: 0.9, metalness: 0.04 });
   const poleMat = new THREE.MeshStandardMaterial({ color: 0x2c3548, metalness: 0.7, roughness: 0.3 });
+  const stripeMat = new THREE.MeshBasicMaterial({ color: 0xdde8f8 });
 
   for (let i = 0; i < ROAD_X.length; i++) {
     for (let j = 0; j < ROAD_Z.length; j++) {
@@ -86,7 +110,16 @@ export function buildRoadNetwork(scene) {
       pad.position.set(ix, 0.03, iz);
       group.add(pad);
 
-      // Add traffic signal gantry at key avenues
+      // Zebra crosswalk stripes on major boulevards
+      if (ix >= 0) {
+        for (let s = -8; s <= 8; s += 3.2) {
+          const zbar = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.2), stripeMat);
+          zbar.rotation.x = -Math.PI / 2;
+          zbar.position.set(ix + s, 0.085, iz + 12.6);
+          group.add(zbar);
+        }
+      }
+
       if ((i + j) % 2 === 0) {
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 6.8, 8), poleMat);
         pole.position.set(ix + 13, 3.4, iz + 13);

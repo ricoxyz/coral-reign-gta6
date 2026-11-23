@@ -8,13 +8,15 @@ export function initPedestriansAndEnemies(scene, state) {
 
   const jacketColors = [0x00f0ff, 0xffbf3c, 0x4eff91, 0xff7e29, 0xb978ff, 0xff4d79];
 
-  // 28 Sidewalk Pedestrians across Solana Strip & Downtown
+  // 28 Sidewalk Pedestrians across Solana Strip, Oceanfront & Downtown
   for (let i = 0; i < 28; i++) {
     const mesh = buildCharacterMesh({
       jacket: jacketColors[i % jacketColors.length],
       shirt: 0xffffff,
       pants: 0x1d263b,
     });
+    // Hide gun on peaceful pedestrians
+    if (mesh.userData.gunMesh) mesh.userData.gunMesh.visible = false;
     scene.add(mesh);
 
     const avenue = ROAD_X[(i + 3) % ROAD_X.length];
@@ -39,10 +41,10 @@ export function initPedestriansAndEnemies(scene, state) {
   const enemyConfigs = [
     { x: 104, z: 18, rotY: 0, jacket: 0xff2a55, role: 'CARTEL ENFORCER' },
     { x: 116, z: 14, rotY: -0.2, jacket: 0xff7e29, role: 'BULLION GUARD' },
-    { x: 101, z: 9, rotY: 0.25, jacket: 0x101828, role: 'PALMA SWAT' },
-    { x: 119, z: 6, rotY: -0.3, jacket: 0x101828, role: 'PALMA SWAT' },
+    { x: 101, z: 9, rotY: 0.25, jacket: 0x14223b, role: 'PALMA SWAT' },
+    { x: 119, z: 6, rotY: -0.3, jacket: 0x14223b, role: 'PALMA SWAT' },
     { x: 108, z: 3, rotY: 0, jacket: 0xff2a55, role: 'SYNDICATE HEAVY' },
-    { x: 114, z: -2, rotY: -0.15, jacket: 0x101828, role: 'TACTICAL LEAD' },
+    { x: 114, z: -2, rotY: -0.15, jacket: 0x14223b, role: 'TACTICAL LEAD' },
   ];
 
   for (let i = 0; i < enemyConfigs.length; i++) {
@@ -51,6 +53,7 @@ export function initPedestriansAndEnemies(scene, state) {
       jacket: ec.jacket,
       shirt: 0xffbf3c,
       pants: 0x0e1422,
+      visor: 0xff2a55,
     });
     mesh.userData.rightArm.rotation.x = -Math.PI * 0.46;
     scene.add(mesh);
@@ -64,6 +67,7 @@ export function initPedestriansAndEnemies(scene, state) {
       rotY: ec.rotY,
       hp: 100,
       alive: true,
+      downed: false,
       mesh,
     });
   }
@@ -77,10 +81,12 @@ export function initPedestriansAndEnemies(scene, state) {
     update(dt) {
       for (let i = 0; i < pedestrians.length; i++) {
         const ped = pedestrians[i];
-        ped.z += Math.cos(ped.rotY) * ped.speed * dt;
-        if (ped.z > 340) ped.z = -340;
-        if (ped.z < -340) ped.z = 340;
-        ped.walkPhase += dt * 6;
+        if (!state.activeShot) {
+          ped.z += Math.cos(ped.rotY) * ped.speed * dt;
+          if (ped.z > 340) ped.z = -340;
+          if (ped.z < -340) ped.z = 340;
+          ped.walkPhase += dt * 6;
+        }
         const swing = Math.sin(ped.walkPhase) * 0.38;
         ped.mesh.userData.leftLeg.rotation.x = swing;
         ped.mesh.userData.rightLeg.rotation.x = -swing;
@@ -90,13 +96,21 @@ export function initPedestriansAndEnemies(scene, state) {
 
       for (let i = 0; i < enemies.length; i++) {
         const en = enemies[i];
-        if (!en.alive) {
+        if (!en.alive && !en.downed) {
           en.mesh.visible = false;
           continue;
         }
         en.mesh.visible = true;
-        const angleToPlayer = Math.atan2(state.player.x - en.x, state.player.z - en.z);
-        en.rotY = angleToPlayer;
+        if (en.downed) {
+          // Downed pose flat on asphalt
+          en.mesh.position.set(en.x, 0.22, en.z);
+          en.mesh.rotation.set(-Math.PI * 0.48, en.rotY, 0.25);
+          continue;
+        }
+        en.mesh.rotation.set(0, en.rotY, 0);
+        if (!state.activeShot) {
+          en.rotY = Math.atan2(state.player.x - en.x, state.player.z - en.z);
+        }
         en.mesh.position.set(en.x, en.y, en.z);
         en.mesh.rotation.y = en.rotY;
       }

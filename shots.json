@@ -1,6 +1,6 @@
 [
-  { "name": "1-cover-heist-chase.jpg", "query": "?shot=cover&seed=101" },
-  { "name": "2-combat-crossfire.jpg", "query": "?shot=combat&seed=202" },
-  { "name": "3-pause-map-missions.jpg", "query": "?shot=map&seed=303" },
-  { "name": "4-title-save-slots.jpg", "query": "?shot=title&seed=404" }
+  { "name": "01_cover_chase.jpg", "query": "?shot=cover&seed=101" },
+  { "name": "02_onfoot_combat.jpg", "query": "?shot=combat&seed=202" },
+  { "name": "03_map_stats_save.jpg", "query": "?shot=map&seed=303" },
+  { "name": "04_title_screen.jpg", "query": "?shot=title&seed=404" }
 ]

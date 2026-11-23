@@ -1,40 +1,68 @@
-// Live HUD Synchronizer: Mission Banner, Wanted Stars, Police Dispatch, Weapons, Vitals, & Speedometer
+// Live HUD Synchronizer: Mission Banner, Wanted Stars, Police Dispatch, 6 Weapon Slots, Minimap & Speedometer
 import { WANTED_TIERS } from '../police/wantedSystem.js';
 import { RADIO_STATIONS } from '../audio/radio.js';
 import { renderMinimap } from './minimap.js';
 import { updateDialogueUI } from './dialogue.js';
 
-export function updateHUD(state, weaponsSys) {
+export function updateHUD(state, weaponsSys, camera) {
+  const uiLayer = document.getElementById('ui-layer');
+  if (uiLayer) {
+    uiLayer.classList.toggle('hidden', state.mode !== 'play');
+  }
+  if (state.mode !== 'play') return;
+
   const p = state.player;
   const w = state.wanted;
   const m = state.mission;
 
-  // Mission Banner
+  // Crosshair only visible on foot
+  const crosshair = document.getElementById('crosshair');
+  if (crosshair) {
+    crosshair.classList.toggle('hidden', Boolean(p.inVehicle));
+  }
+
+  // Mission Card (Top-Left)
   const stageEl = document.getElementById('hud-mission-stage');
   const rewardEl = document.getElementById('hud-mission-reward');
   const titleEl = document.getElementById('hud-mission-title');
   const objEl = document.getElementById('hud-mission-obj');
   const distEl = document.getElementById('hud-mission-dist');
+  const stageBarEl = document.getElementById('hud-stage-bar');
 
   if (stageEl) {
-    const mNum = String(m.currentIndex + 1).padStart(2, '0');
-    stageEl.textContent = `STORY MISSION ${mNum} / 10 • STAGE ${m.stageIndex + 1}/${m.totalStages}`;
+    stageEl.textContent = `JOB ${m.currentIndex + 1}/10 · STAGE ${m.stageIndex + 1}/${m.totalStages}`;
   }
-  if (rewardEl) {
-    rewardEl.textContent = `+$${m.rewardCash.toLocaleString()} • +${m.rewardRespect.toLocaleString()} RESPECT`;
-  }
+  if (rewardEl) rewardEl.textContent = `+$${m.rewardCash.toLocaleString()}`;
   if (titleEl) titleEl.textContent = m.title;
-  if (objEl) objEl.textContent = m.objective;
+  if (objEl) objEl.textContent = `NEXT: ${m.objective}`;
   if (distEl) distEl.textContent = `${m.distance}m`;
+  if (stageBarEl) {
+    let segHtml = '';
+    for (let s = 0; s < m.totalStages; s++) {
+      const cls = s < m.stageIndex ? 'done' : s === m.stageIndex ? 'active' : '';
+      segHtml += `<div class="stage-seg ${cls}"></div>`;
+    }
+    stageBarEl.innerHTML = segHtml;
+  }
 
-  // Top-Right Cash, Rank, Wanted Stars
+  // Top-Right Cash, Clock, Wanted Stars, Rank, 6 Weapon Slots & Crew Abilities
   const cashEl = document.getElementById('hud-cash');
+  const clockEl = document.getElementById('hud-clock');
   const rankEl = document.getElementById('hud-rank');
+  const rpEl = document.getElementById('hud-rp');
   const wantedLbl = document.getElementById('hud-wanted-label');
   const starsEl = document.getElementById('hud-stars');
 
   if (cashEl) cashEl.textContent = `$${p.cash.toLocaleString()}`;
-  if (rankEl) rankEl.textContent = `RANK ${p.rank} • ${p.rankTitle}`;
+  if (clockEl) {
+    const hrs = Math.floor(state.clockHour);
+    const mins = Math.floor((state.clockHour % 1) * 60);
+    const period = hrs >= 19 ? 'DUSK' : 'SUNSET';
+    clockEl.textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${period}`;
+  }
+  if (rankEl) rankEl.textContent = `RANK ${p.rank} · ${p.rankTitle}`;
+  if (rpEl) rpEl.textContent = `${p.respect.toLocaleString()} RP`;
+
   const tier = WANTED_TIERS[Math.min(5, Math.max(0, w.stars))];
   if (wantedLbl) wantedLbl.textContent = tier.label;
 
@@ -46,12 +74,17 @@ export function updateHUD(state, weaponsSys) {
     starsEl.innerHTML = starsHtml;
   }
 
-  // Weapon & Crew Abilities
   const wep = weaponsSys.getCurrentWeapon();
   const wepNameEl = document.getElementById('hud-weapon-name');
   const wepAmmoEl = document.getElementById('hud-weapon-ammo');
   if (wepNameEl) wepNameEl.textContent = wep.name;
   if (wepAmmoEl) wepAmmoEl.textContent = `${wep.mag} / ${wep.reserve}`;
+
+  const slotEls = document.querySelectorAll('#hud-weapon-slots .wep-slot');
+  slotEls.forEach((el) => {
+    const idx = Number(el.getAttribute('data-slot'));
+    el.classList.toggle('active', idx === p.weaponIndex);
+  });
 
   const ab = state.crew.abilities;
   const zEl = document.getElementById('crew-z');
@@ -61,7 +94,7 @@ export function updateHUD(state, weaponsSys) {
   if (xEl) xEl.textContent = ab.fieldRepair.cooldown > 0 ? `[X] ${Math.ceil(ab.fieldRepair.cooldown)}s` : '[X] REPAIR';
   if (cEl) cEl.textContent = ab.policeJammer.cooldown > 0 ? `[C] ${Math.ceil(ab.policeJammer.cooldown)}s` : '[C] JAMMER';
 
-  // Tactical Police Dispatch List
+  // Tactical Police Dispatch Feed
   const codeEl = document.getElementById('dispatch-code');
   const listEl = document.getElementById('dispatch-list');
   if (codeEl) codeEl.textContent = w.code.split('•')[0].trim();
@@ -71,20 +104,14 @@ export function updateHUD(state, weaponsSys) {
       .join('');
   }
 
-  // Bottom-Left District, Clock, Vitals & Minimap
+  // Bottom-Left District, Vitals & Minimap
   const distNameEl = document.getElementById('hud-district');
-  const clockEl = document.getElementById('hud-clock');
   const hpFill = document.getElementById('hud-health-fill');
   const arFill = document.getElementById('hud-armor-fill');
   const hpText = document.getElementById('hud-hp-text');
   const arText = document.getElementById('hud-ar-text');
 
   if (distNameEl && state.currentDistrict) distNameEl.textContent = state.currentDistrict.name;
-  if (clockEl) {
-    const hrs = Math.floor(state.clockHour);
-    const mins = Math.floor((state.clockHour % 1) * 60);
-    clockEl.textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} • GOLDEN HOUR`;
-  }
   if (hpFill) hpFill.style.width = `${p.health}%`;
   if (arFill) arFill.style.width = `${p.armor}%`;
   if (hpText) hpText.textContent = `HP ${Math.round(p.health)}%`;
@@ -93,7 +120,52 @@ export function updateHUD(state, weaponsSys) {
   renderMinimap(state);
   updateDialogueUI(state);
 
-  // Context Action Prompt & Speedometer
+  // Nearest Vehicle & In-World Floating [F] Hijack Prompt
+  const hijackBadge = document.getElementById('world-hijack-badge');
+  let nearCar = null;
+  let bestD = 12.0;
+  if (!p.inVehicle) {
+    for (let i = 0; i < state.entities.vehicles.length; i++) {
+      const v = state.entities.vehicles[i];
+      if (v.isPolice) continue;
+      const d = Math.hypot(v.x - p.x, v.z - p.z);
+      if (d < bestD) {
+        bestD = d;
+        nearCar = v;
+      }
+    }
+    if (!nearCar) {
+      for (let i = 0; i < state.entities.vehicles.length; i++) {
+        const v = state.entities.vehicles[i];
+        const d = Math.hypot(v.x - p.x, v.z - p.z);
+        if (d < bestD) {
+          bestD = d;
+          nearCar = v;
+        }
+      }
+    }
+  }
+
+  if (hijackBadge) {
+    if (!p.inVehicle && nearCar && camera && window.THREE) {
+      const worldPos = new window.THREE.Vector3(nearCar.x, 2.25, nearCar.z);
+      worldPos.project(camera);
+      if (worldPos.z < 1) {
+        const sx = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
+        hijackBadge.style.left = `${Math.round(sx)}px`;
+        hijackBadge.style.top = `${Math.round(sy)}px`;
+        hijackBadge.innerHTML = `<span class="key-badge">F</span><span>Hijack ${nearCar.name}</span>`;
+        hijackBadge.classList.add('visible');
+      } else {
+        hijackBadge.classList.remove('visible');
+      }
+    } else {
+      hijackBadge.classList.remove('visible');
+    }
+  }
+
+  // Context Prompt & Speedometer (KM/H)
   const promptText = document.getElementById('prompt-text');
   const speedEl = document.getElementById('hud-speed');
   const gearEl = document.getElementById('hud-gear');
@@ -104,34 +176,23 @@ export function updateHUD(state, weaponsSys) {
 
   const activeCar = state.entities.vehicles.find((v) => v.id === p.vehicleId);
   if (p.inVehicle && activeCar) {
-    if (promptText) promptText.textContent = `DRIVING ${activeCar.name.toUpperCase()} • [F] EXIT • [SPACE] DRIFT`;
-    if (speedEl) speedEl.textContent = String(activeCar.mph || 0);
-    if (gearEl) gearEl.textContent = `GEAR ${activeCar.gear || 1}`;
-    if (rpmFill) rpmFill.style.width = `${activeCar.rpm || 35}%`;
+    if (promptText) promptText.textContent = `EXIT ${activeCar.name.toUpperCase()} · [SPACE] DRIFT · [Z/X/C] CREW`;
+    if (speedEl) speedEl.textContent = String(activeCar.mph || 118);
+    if (gearEl) gearEl.textContent = `GEAR ${activeCar.gear || 5}`;
+    if (rpmFill) rpmFill.style.width = `${activeCar.rpm || 78}%`;
     if (vehNameEl) vehNameEl.textContent = activeCar.name.toUpperCase();
-    if (vehClsEl) vehClsEl.textContent = `${activeCar.cls} • ${activeCar.hp}% HP`;
+    if (vehClsEl) vehClsEl.textContent = `${activeCar.hp}% COND`;
   } else {
-    // Check nearest vehicle to hijack
-    let nearCar = null;
-    let bestD = 9.5;
-    for (let i = 0; i < state.entities.vehicles.length; i++) {
-      const v = state.entities.vehicles[i];
-      const d = Math.hypot(v.x - p.x, v.z - p.z);
-      if (d < bestD) {
-        bestD = d;
-        nearCar = v;
-      }
-    }
     if (promptText) {
       promptText.textContent = nearCar
-        ? `HIJACK ${nearCar.name.toUpperCase()} (${Math.round(bestD)}m) • [LMB] FIRE WEAPON`
-        : `ON FOOT COMBAT • [LMB] FIRE ${wep.name} • [1-6] SWITCH WEAPON`;
+        ? `HIJACK ${nearCar.name.toUpperCase()} · [LMB] FIRE · [1–6] WEAPON`
+        : `ON FOOT COMBAT · [LMB] FIRE · [1–6] SWITCH WEAPON`;
     }
-    if (speedEl) speedEl.textContent = '14';
+    if (speedEl) speedEl.textContent = '18';
     if (gearEl) gearEl.textContent = 'ON FOOT';
-    if (rpmFill) rpmFill.style.width = '42%';
-    if (vehNameEl) vehNameEl.textContent = nearCar ? `NEAR: ${nearCar.name.toUpperCase()}` : 'DANI VEGA • ON FOOT';
-    if (vehClsEl) vehClsEl.textContent = 'TACTICAL SPRINT';
+    if (rpmFill) rpmFill.style.width = '45%';
+    if (vehNameEl) vehNameEl.textContent = nearCar ? `NEAR: ${nearCar.name.toUpperCase()}` : 'DANI VEGA';
+    if (vehClsEl) vehClsEl.textContent = 'TACTICAL';
   }
 
   if (radioEl) {

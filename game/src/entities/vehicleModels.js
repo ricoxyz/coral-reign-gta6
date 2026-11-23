@@ -1,5 +1,5 @@
-// Sculpted multi-part aerodynamic 3D vehicles with sloped hoods, angled windshields,
-// wheel arches, rotating rims, spoilers, headlights/taillights, and police lightbars
+// Sculpted multi-part aerodynamic 3D vehicles with sloped hoods, fastback windshields,
+// wheel arches, rotating rims, spoilers, bullbars, brake lights, and police lightbars
 import { VEHICLE_ARCHETYPES } from '../core/config.js';
 
 export function buildSculptedVehicleMesh(archetype) {
@@ -12,85 +12,116 @@ export function buildSculptedVehicleMesh(archetype) {
 
   const paintMat = new THREE.MeshStandardMaterial({
     color: archetype.color,
-    roughness: 0.2,
-    metalness: 0.78,
+    roughness: 0.22,
+    metalness: 0.72,
   });
   const accentMat = new THREE.MeshStandardMaterial({
     color: archetype.accent,
-    roughness: 0.32,
+    roughness: 0.3,
     metalness: 0.65,
   });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x0b1628,
-    emissive: 0x05182e,
+    emissive: 0x071a30,
     roughness: 0.08,
     metalness: 0.9,
   });
-  const tireMat = new THREE.MeshStandardMaterial({ color: 0x12141a, roughness: 0.85 });
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x11141a, roughness: 0.88 });
   const rimMat = new THREE.MeshStandardMaterial({ color: 0xdbe6ff, metalness: 0.9, roughness: 0.2 });
 
-  // Lower aerodynamic chassis skirt
-  const lowerChassis = new THREE.Mesh(new THREE.BoxGeometry(W, H * 0.42, L), paintMat);
+  // Lower aerodynamic chassis + front splitter lip
+  const lowerChassis = new THREE.Mesh(new THREE.BoxGeometry(W, H * 0.4, L), paintMat);
   lowerChassis.position.y = H * 0.36;
   root.add(lowerChassis);
 
+  const splitter = new THREE.Mesh(new THREE.BoxGeometry(W * 1.02, 0.09, 0.35), accentMat);
+  splitter.position.set(0, H * 0.16, L * 0.51);
+  root.add(splitter);
+
   // Sloped front hood wedge
-  const hood = new THREE.Mesh(new THREE.BoxGeometry(W * 0.94, H * 0.24, L * 0.36), paintMat);
-  hood.position.set(0, H * 0.56, L * 0.28);
-  hood.rotation.x = 0.16;
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(W * 0.94, H * 0.22, L * 0.38), paintMat);
+  hood.position.set(0, H * 0.54, L * 0.28);
+  hood.rotation.x = 0.15;
   root.add(hood);
 
-  // Racing stripe / side accent trim
-  const sideTrim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.03, H * 0.12, L * 0.88), accentMat);
-  sideTrim.position.set(0, H * 0.34, 0);
-  root.add(sideTrim);
+  // Police white doors livery or sports racing side trim
+  if (archetype.cls === 'POLICE') {
+    const whiteDoors = new THREE.Mesh(new THREE.BoxGeometry(W * 1.02, H * 0.38, L * 0.46), accentMat);
+    whiteDoors.position.set(0, H * 0.37, -L * 0.03);
+    root.add(whiteDoors);
 
-  // Sculpted cabin greenhouse with sloped front & rear windshields
+    // Front steel pushbar bullbar
+    const pushBar = new THREE.Mesh(
+      new THREE.BoxGeometry(W * 0.62, H * 0.28, 0.16),
+      new THREE.MeshStandardMaterial({ color: 0x2a3240, metalness: 0.85, roughness: 0.25 })
+    );
+    pushBar.position.set(0, H * 0.34, L * 0.54);
+    root.add(pushBar);
+  } else {
+    const sideTrim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.03, H * 0.1, L * 0.86), accentMat);
+    sideTrim.position.set(0, H * 0.32, 0);
+    root.add(sideTrim);
+  }
+
+  // Sculpted cabin greenhouse with sloped front & fastback rear windshields
   const isHeavy = archetype.cls === 'HEAVY' || archetype.cls === 'SUV';
-  const cabinLen = isHeavy ? L * 0.62 : L * 0.46;
-  const cabinH = isHeavy ? H * 0.52 : H * 0.44;
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(W * 0.84, cabinH, cabinLen), paintMat);
-  cabin.position.set(0, H * 0.74, isHeavy ? -L * 0.08 : -L * 0.05);
+  const cabinLen = isHeavy ? L * 0.62 : L * 0.44;
+  const cabinH = isHeavy ? H * 0.5 : H * 0.42;
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(W * 0.82, cabinH, cabinLen), paintMat);
+  cabin.position.set(0, H * 0.72, isHeavy ? -L * 0.08 : -L * 0.04);
   root.add(cabin);
 
-  // Angled front windshield glass
-  const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(W * 0.8, cabinH * 0.88, 0.12), glassMat);
-  frontGlass.position.set(0, H * 0.75, cabin.position.z + cabinLen * 0.5);
-  frontGlass.rotation.x = -0.52;
+  const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(W * 0.78, cabinH * 0.9, 0.12), glassMat);
+  frontGlass.position.set(0, H * 0.72, cabin.position.z + cabinLen * 0.52);
+  frontGlass.rotation.x = -0.58;
   root.add(frontGlass);
 
-  // Side windows glass band
-  const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(W * 0.86, cabinH * 0.72, cabinLen * 0.82), glassMat);
-  sideGlass.position.set(0, H * 0.76, cabin.position.z);
+  const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(W * 0.76, cabinH * 0.86, 0.12), glassMat);
+  rearGlass.position.set(0, H * 0.71, cabin.position.z - cabinLen * 0.52);
+  rearGlass.rotation.x = 0.62;
+  root.add(rearGlass);
+
+  const sideGlass = new THREE.Mesh(new THREE.BoxGeometry(W * 0.84, cabinH * 0.7, cabinLen * 0.82), glassMat);
+  sideGlass.position.set(0, H * 0.73, cabin.position.z);
   root.add(sideGlass);
 
   // Aerodynamic rear wing spoiler for Exotic / Sports / Police
   if (archetype.cls === 'EXOTIC' || archetype.cls === 'SPORTS' || archetype.cls === 'POLICE') {
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(W * 0.96, 0.1, 0.45), accentMat);
-    wing.position.set(0, H * 0.88, -L * 0.44);
+    const wingMat = archetype.cls === 'POLICE' ? paintMat : accentMat;
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(W * 0.92, 0.08, 0.38), wingMat);
+    wing.position.set(0, H * 0.86, -L * 0.44);
     wing.rotation.x = 0.14;
     root.add(wing);
 
     for (const sx of [-W * 0.34, W * 0.34]) {
-      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.32, 0.25), accentMat);
+      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.26, 0.22), wingMat);
       strut.position.set(sx, H * 0.72, -L * 0.43);
       root.add(strut);
     }
   }
 
   // Twin glowing xenon headlights (+Z is forward)
-  const headMat = new THREE.MeshBasicMaterial({ color: 0xe6ffff });
+  const headMat = new THREE.MeshBasicMaterial({ color: 0xeaffff });
   for (const hx of [-W * 0.34, W * 0.34]) {
-    const hLight = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.18, 0.12), headMat);
-    hLight.position.set(hx, H * 0.44, L * 0.5 + 0.02);
+    const hLight = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 0.12), headMat);
+    hLight.position.set(hx, H * 0.42, L * 0.5 + 0.02);
     root.add(hLight);
   }
 
-  // Full-width neon LED taillight bar (-Z is rear)
-  const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1e42 });
-  const tailBar = new THREE.Mesh(new THREE.BoxGeometry(W * 0.88, 0.18, 0.12), tailMat);
-  tailBar.position.set(0, H * 0.46, -L * 0.5 - 0.02);
+  // Full-width neon LED taillight bar + twin exhaust ports (-Z is rear)
+  const tailMat = new THREE.MeshBasicMaterial({ color: 0xff2248 });
+  const tailBar = new THREE.Mesh(new THREE.BoxGeometry(W * 0.88, 0.16, 0.12), tailMat);
+  tailBar.position.set(0, H * 0.45, -L * 0.5 - 0.02);
   root.add(tailBar);
+
+  // Subtle ground shadow plate under chassis for grounded visual contact
+  const shadowPlate = new THREE.Mesh(
+    new THREE.PlaneGeometry(W * 1.12, L * 1.06),
+    new THREE.MeshBasicMaterial({ color: 0x050810, transparent: true, opacity: 0.48, depthWrite: false })
+  );
+  shadowPlate.rotation.x = -Math.PI / 2;
+  shadowPlate.position.y = 0.06;
+  root.add(shadowPlate);
 
   // 4 Rotating wheels with alloy rims
   const wheels = [];
@@ -115,31 +146,31 @@ export function buildSculptedVehicleMesh(archetype) {
     wheels.push(wGroup);
   }
 
-  // Police Cruiser Red/Blue Strobe Lightbar & PointLight reflection
+  // Police Cruiser Red/Blue Strobe Lightbar (crisp emissive glow, subtle non-glaring PointLight)
   let sirenRed = null;
   let sirenBlue = null;
   let sirenLight = null;
   if (archetype.cls === 'POLICE') {
-    const barBase = new THREE.Mesh(new THREE.BoxGeometry(W * 0.68, 0.12, 0.32), accentMat);
-    barBase.position.set(0, H + 0.05, -0.1);
+    const barBase = new THREE.Mesh(new THREE.BoxGeometry(W * 0.72, 0.11, 0.32), accentMat);
+    barBase.position.set(0, H * 0.98, -0.08);
     root.add(barBase);
 
     sirenRed = new THREE.Mesh(
-      new THREE.BoxGeometry(W * 0.3, 0.18, 0.28),
+      new THREE.BoxGeometry(W * 0.32, 0.19, 0.28),
       new THREE.MeshBasicMaterial({ color: 0xff1744 })
     );
-    sirenRed.position.set(-W * 0.17, H + 0.12, -0.1);
+    sirenRed.position.set(-W * 0.18, H * 1.05, -0.08);
     root.add(sirenRed);
 
     sirenBlue = new THREE.Mesh(
-      new THREE.BoxGeometry(W * 0.3, 0.18, 0.28),
+      new THREE.BoxGeometry(W * 0.32, 0.19, 0.28),
       new THREE.MeshBasicMaterial({ color: 0x00b0ff })
     );
-    sirenBlue.position.set(W * 0.17, H + 0.12, -0.1);
+    sirenBlue.position.set(W * 0.18, H * 1.05, -0.08);
     root.add(sirenBlue);
 
-    sirenLight = new THREE.PointLight(0xff1744, 2.2, 22);
-    sirenLight.position.set(0, H + 0.8, 0);
+    sirenLight = new THREE.PointLight(0xff1744, 0.55, 10);
+    sirenLight.position.set(0, H + 1.2, 0);
     root.add(sirenLight);
   }
 

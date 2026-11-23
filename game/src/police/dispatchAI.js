@@ -1,4 +1,4 @@
-// Police Interceptor AI: spawns pursuit cruisers, flanking maneuvers, and strobe sirens
+// Police Interceptor AI: spawns 4+ pursuit cruisers, flanking maneuvers, and strobe sirens
 import { buildSculptedVehicleMesh, getArchetypeById } from '../entities/vehicleModels.js';
 
 export function initPoliceDispatchAI(scene, state) {
@@ -6,9 +6,10 @@ export function initPoliceDispatchAI(scene, state) {
   const cruisers = [];
 
   const unitSpecs = [
-    { id: 'police_1', callsign: 'CORAL-12', tactic: 'RAMMING INTERCEPT', x: 105, z: 54, rotY: Math.PI + 0.08 },
-    { id: 'police_2', callsign: 'MARINA-4', tactic: 'FLANKING BOULEVARD', x: 116, z: 59, rotY: Math.PI - 0.1 },
-    { id: 'police_3', callsign: 'VIDRIO-7', tactic: 'PINCER BLOCK', x: 113, z: 22, rotY: 0.22 },
+    { id: 'police_1', callsign: 'CORAL-12', tactic: 'RAMMING', x: 103.5, z: 50, rotY: Math.PI + 0.12 },
+    { id: 'police_2', callsign: 'MARINA-4', tactic: 'FLANKING', x: 117.0, z: 46, rotY: Math.PI - 0.15 },
+    { id: 'police_3', callsign: 'VIDRIO-7', tactic: 'INTERCEPT', x: 104.5, z: 22, rotY: Math.PI - 0.24 },
+    { id: 'police_4', callsign: 'TAC-9', tactic: 'ROADBLOCK', x: 116.5, z: 16, rotY: 0.25 },
   ];
 
   for (let i = 0; i < unitSpecs.length; i++) {
@@ -28,10 +29,10 @@ export function initPoliceDispatchAI(scene, state) {
       y: 0,
       z: spec.z,
       rotY: spec.rotY,
-      speed: 28,
+      speed: 30,
       mph: 118,
       gear: 4,
-      rpm: 78,
+      rpm: 80,
       hp: 100,
       mesh,
     };
@@ -50,19 +51,18 @@ export function initPoliceDispatchAI(scene, state) {
         const c = cruisers[i];
         if (c.isPlayerControlled) continue;
 
-        // Flash red/blue strobe lightbar & point light
+        // Flash red/blue strobe lightbar
         const phase = Math.sin(time * 14 + i * 2.1) > 0;
         const { sirenRed, sirenBlue, sirenLight } = c.mesh.userData;
         if (sirenRed && sirenBlue && sirenLight) {
-          sirenRed.material.color.setHex(phase ? 0xff1744 : 0x330510);
-          sirenBlue.material.color.setHex(phase ? 0x051833 : 0x00b0ff);
-          sirenLight.color.setHex(phase ? 0xff1744 : 0x00b0ff);
-          sirenLight.intensity = stars > 0 ? 2.4 : 0;
+          sirenRed.material.color.setHex(phase ? 0xff1744 : 0x440814);
+          sirenBlue.material.color.setHex(phase ? 0x061b3a : 0x00b8ff);
+          sirenLight.color.setHex(phase ? 0xff1744 : 0x00b8ff);
+          sirenLight.intensity = stars > 0 ? 0.55 : 0;
         }
 
-        if (stars === 0) continue;
+        if (stars === 0 || state.activeShot) continue;
 
-        // Steer aggressively toward player vehicle / position
         const dx = px - c.x;
         const dz = pz - c.z;
         const dist = Math.hypot(dx, dz);

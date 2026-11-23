@@ -4,39 +4,39 @@ const STORAGE_PREFIX = 'coral_reign_palma_dorada_slot_';
 const DEFAULT_SLOTS = {
   1: {
     slot: 1,
-    title: 'SLOT 1 • KINGPIN HEIST CAMPAIGN',
+    title: 'SLOT 1 · KINGPIN',
     district: 'SOLANA STRIP',
-    completionPct: 68,
-    cash: 248500,
+    completionPct: 68.4,
+    cash: 24850,
     respect: 14200,
     rank: 14,
-    missionIndex: 3,
+    missionIndex: 6,
     wantedStars: 4,
-    timestamp: '18:42 GOLDEN HOUR',
+    timestamp: '18:42',
   },
   2: {
     slot: 2,
-    title: 'SLOT 2 • MARINA CONTRABAND RUN',
+    title: 'SLOT 2 · MARINA',
     district: 'CORAL MARINA',
-    completionPct: 42,
+    completionPct: 42.0,
     cash: 118400,
     respect: 8400,
     rank: 10,
-    missionIndex: 1,
+    missionIndex: 3,
     wantedStars: 2,
-    timestamp: '19:15 SUNSET COAST',
+    timestamp: '21:15',
   },
   3: {
     slot: 3,
-    title: 'SLOT 3 • VIDRIO SOVEREIGN FINALE',
-    district: 'VIDRIO DOWNTOWN',
-    completionPct: 94,
+    title: 'SLOT 3 · FINALE',
+    district: 'VIDRIO',
+    completionPct: 94.2,
     cash: 642800,
     respect: 28500,
     rank: 19,
     missionIndex: 9,
     wantedStars: 5,
-    timestamp: '20:05 NEON DUSK',
+    timestamp: '23:05',
   },
 };
 
@@ -54,7 +54,7 @@ export function initSaveSystem(state, events, soundEngine) {
   function saveSlot(slotNum) {
     const data = {
       slot: slotNum,
-      title: `SLOT ${slotNum} • ${state.player.rankTitle} CAREER`,
+      title: `SLOT ${slotNum} · ${state.player.rankTitle}`,
       district: state.currentDistrict ? state.currentDistrict.name : 'SOLANA STRIP',
       completionPct: state.stats.completionPct,
       cash: state.player.cash,
@@ -89,25 +89,28 @@ export function initSaveSystem(state, events, soundEngine) {
     return data;
   }
 
-  function renderSaveSlotsInto(containerId) {
+  function renderSaveSlotsInto(containerId, mode = 'pause') {
     const container = document.getElementById(containerId);
     if (!container) return;
     let html = '';
     for (let s = 1; s <= 3; s++) {
       const d = getSlotData(s);
+      const btns = mode === 'title'
+        ? `<button class="btn-small" data-action="load" data-slot="${s}">PLAY</button>`
+        : `<button class="btn-small save" data-action="save" data-slot="${s}">SAVE</button>
+           <button class="btn-small" data-action="load" data-slot="${s}">LOAD</button>`;
       html += `
         <div class="save-slot-row" data-slot="${s}">
-          <div>
-            <div class="save-slot-info">${d.title} (${d.completionPct}%)</div>
-            <div class="save-slot-sub">${d.district} • $${Number(d.cash).toLocaleString()} • RANK ${d.rank}</div>
+          <div class="save-slot-meta">
+            <div class="save-slot-info">${d.title} · ${d.completionPct}%</div>
+            <div class="save-slot-sub">${d.district} · $${Number(d.cash).toLocaleString()} · ${d.timestamp}</div>
           </div>
-          <div class="save-slot-btns">
-            <button class="btn-small save" data-action="save" data-slot="${s}">SAVE</button>
-            <button class="btn-small" data-action="load" data-slot="${s}">LOAD</button>
-          </div>
+          <div class="save-slot-btns">${btns}</div>
         </div>
       `;
     }
+    if (container._lastHtml === html) return;
+    container._lastHtml = html;
     container.innerHTML = html;
 
     const btns = container.querySelectorAll('button[data-action]');
@@ -127,7 +130,6 @@ export function initSaveSystem(state, events, soundEngine) {
     });
   }
 
-  // Ensure default slots are seeded in localStorage on boot
   for (let s = 1; s <= 3; s++) {
     try {
       if (!window.localStorage.getItem(`${STORAGE_PREFIX}${s}`)) {
