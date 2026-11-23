@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>CORAL REIGN — Palma Dorada</title>
+<style>
+  :root {
+    --coral: #ff4d79;
+    --cyan: #00f0ff;
+    --gold: #ffbf3c;
+    --amber: #ff7e29;
+    --navy: #0a101d;
+    --panel: rgba(10, 16, 29, 0.84);
+    --border: rgba(0, 240, 255, 0.35);
+    --text: #f3f7ff;
+    --muted: #98abc4;
+  }
+  * { box-sizing: border-box; user-select: none; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #070b14;
+    font-family: 'Segoe UI', 'Trebuchet MS', system-ui, -apple-system, sans-serif;
+    color: var(--text);
+  }
+  #game-canvas {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    display: block; z-index: 1;
+  }
+  #ui-layer {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+  }
+  /* Crosshair */
+  #crosshair {
+    position: absolute; left: 50%; top: 46%;
+    transform: translate(-50%, -50%);
+    width: 30px; height: 30px;
+    border: 2px solid rgba(0, 240, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 77, 121, 0.7);
+    transition: transform 0.08s ease;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: #ff4d79;
+  }
+  #crosshair::before { left: 50%; top: -6px; bottom: -6px; width: 2px; transform: translateX(-50%); }
+  #crosshair::after { top: 50%; left: -6px; right: -6px; height: 2px; transform: translateY(-50%); }
+  #crosshair.firing { transform: translate(-50%, -50%) scale(1.35); border-color: #ff4d79; }
+
+  /* Top-Center Mission Banner */
+  #mission-banner {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    min-width: 440px; max-width: 620px;
+    background: linear-gradient(135deg, rgba(11, 18, 34, 0.92), rgba(24, 15, 38, 0.88));
+    border: 1.5px solid rgba(255, 191, 60, 0.65);
+    border-left: 5px solid var(--coral);
+    border-radius: 8px;
+    padding: 8px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 77, 121, 0.22);
+    backdrop-filter: blur(8px);
+  }
+  .mission-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--gold);
+  }
+  .mission-title {
+    font-size: 16px; font-weight: 900; letter-spacing: 0.7px;
+    color: #ffffff; margin: 2px 0;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  }
+  .mission-obj {
+    font-size: 13px; font-weight: 700; color: var(--cyan);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mission-reward {
+    color: #4eff91; font-weight: 800; font-size: 12px;
+  }
+
+  /* Top-Right HUD: Cash, Respect, Stars, Weapons, Police Dispatch */
+  #hud-top-right {
+    position: absolute; top: 14px; right: 16px;
+    width: 286px;
+    display: flex; flex-direction: column; gap: 7px;
+    align-items: flex-end;
+  }
+  .hud-card {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+  }
+  .cash-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  #hud-cash {
+    font-size: 22px; font-weight: 900; color: #4eff91;
+    letter-spacing: 0.8px; text-shadow: 0 0 12px rgba(78, 255, 145, 0.45);
+  }
+  #hud-rank {
+    font-size: 11px; font-weight: 800; color: var(--gold);
+    background: rgba(255, 191, 60, 0.16);
+    border: 1px solid rgba(255, 191, 60, 0.5);
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .xp-bar-wrap {
+    width: 100%; height: 5px; background: rgba(255,255,255,0.12);
+    border-radius: 3px; margin-top: 4px; overflow: hidden;
+  }
+  #hud-xp-fill {
+    height: 100%; width: 64%;
+    background: linear-gradient(90deg, var(--coral), var(--gold));
+  }
+  .wanted-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 6px;
+  }
+  .wanted-label {
+    font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #ff6b8b;
+  }
+  #hud-stars {
+    font-size: 18px; letter-spacing: 3px;
+  }
+  .star-on {
+    color: #ffbf3c;
+    text-shadow: 0 0 10px #ff3355, 0 0 4px #ffbf3c;
+  }
+  .star-off { color: rgba(255, 255, 255, 0.18); }
+
+  .weapon-row {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #hud-weapon-name {
+    font-size: 14px; font-weight: 900; color: #fff;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  #hud-weapon-ammo {
+    font-size: 14px; font-weight: 800; color: var(--cyan);
+  }
+  .crew-row {
+    display: flex; gap: 5px; margin-top: 6px;
+  }
+  .crew-pill {
+    flex: 1; font-size: 10px; font-weight: 800; text-align: center;
+    padding: 3px 4px; border-radius: 4px;
+    background: rgba(0, 240, 255, 0.12);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    color: #d6f8ff;
+  }
+  .crew-pill.ready { border-color: #4eff91; color: #4eff91; }
+
+  /* Tactical Police Dispatch Feed */
+  #dispatch-panel {
+    border-left: 4px solid #ff3355;
+    background: linear-gradient(135deg, rgba(22, 10, 24, 0.9), rgba(10, 16, 29, 0.9));
+  }
+  .dispatch-header {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; font-weight: 900; letter-spacing: 1.4px;
+    color: #ff4d79; margin-bottom: 4px;
+  }
+  .dispatch-live-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #ff2a55; box-shadow: 0 0 8px #ff2a55;
+    margin-right: 4px;
+  }
+  #dispatch-list {
+    list-style: none; margin: 0; padding: 0;
+    font-size: 11px; font-weight: 700; line-height: 1.45;
+    color: #e2eeff;
+  }
+  #dispatch-list li {
+    display: flex; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 1px 0;
+  }
+  .unit-tag { color: var(--cyan); font-weight: 800; }
+  .unit-status { color: var(--gold); }
+
+  /* Bottom-Left Minimap + Health/Armor + District */
+  #hud-bottom-left {
+    position: absolute; bottom: 16px; left: 16px;
+    width: 248px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+  }
+  .district-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  #hud-district {
+    font-size: 13px; font-weight: 900; color: var(--gold);
+    letter-spacing: 0.9px; text-transform: uppercase;
+  }
+  #hud-clock {
+    font-size: 11px; font-weight: 800; color: var(--cyan);
+  }
+  #minimap-canvas {
+    width: 224px; height: 152px;
+    display: block; border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: #091322;
+  }
+  .vitals-bars {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .vital-track {
+    flex: 1; height: 9px; background: rgba(255,255,255,0.12);
+    border-radius: 4px; overflow: hidden; position: relative;
+  }
+  #hud-health-fill {
+    height: 100%; width: 92%;
+    background: linear-gradient(90deg, #ff2e55, #4eff91);
+  }
+  #hud-armor-fill {
+    height: 100%; width: 85%;
+    background: linear-gradient(90deg, #0088ff, #00f0ff);
+  }
+  #hud-stamina-fill {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #ff9900, #ffdf40);
+  }
+  .vitals-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; font-weight: 800; color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* Bottom-Center Context Prompt & Dialogue Box */
+  #hud-bottom-center {
+    position: absolute; bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: 480px;
+  }
+  #context-prompt {
+    background: rgba(10, 18, 34, 0.92);
+    border: 1.5px solid var(--gold);
+    color: #fff; font-size: 13px; font-weight: 800;
+    padding: 6px 16px; border-radius: 20px;
+    letter-spacing: 0.6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 12px rgba(255, 191, 60, 0.35);
+  }
+  .key-badge {
+    display: inline-block; background: var(--gold); color: #09101d;
+    font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-right: 5px;
+  }
+  #dialogue-bar {
+    width: 100%;
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, rgba(12, 19, 36, 0.94), rgba(28, 14, 38, 0.92));
+    border: 1px solid rgba(255, 77, 121, 0.55);
+    border-radius: 9px; padding: 8px 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+  }
+  #dialogue-avatar {
+    width: 42px; height: 42px; border-radius: 8px;
+    border: 2px solid var(--coral); flex-shrink: 0;
+    background: #1a243b;
+  }
+  .dialogue-content { flex: 1; }
+  #dialogue-speaker {
+    font-size: 11px; font-weight: 900; color: var(--coral);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  #dialogue-line {
+    font-size: 12.5px; font-weight: 700; color: #f4f7ff;
+    margin-top: 2px;
+  }
+
+  /* Bottom-Right Speedometer, Gear, Vehicle & Radio */
+  #hud-bottom-right {
+    position: absolute; bottom: 16px; right: 16px;
+    width: 245px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+  }
+  .speed-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  #hud-speed {
+    font-size: 34px; font-weight: 900; color: #fff;
+    letter-spacing: 1px; line-height: 1;
+    text-shadow: 0 0 14px rgba(0, 240, 255, 0.55);
+  }
+  .speed-unit {
+    font-size: 12px; font-weight: 800; color: var(--cyan);
+    margin-left: 4px;
+  }
+  #hud-gear {
+    font-size: 16px; font-weight: 900; color: var(--gold);
+    background: rgba(255, 191, 60, 0.16);
+    border: 1px solid rgba(255, 191, 60, 0.55);
+    padding: 2px 8px; border-radius: 5px;
+  }
+  .rpm-track {
+    width: 100%; height: 7px; background: rgba(255,255,255,0.12);
+    border-radius: 4px; margin: 7px 0; overflow: hidden;
+  }
+  #hud-rpm-fill {
+    height: 100%; width: 78%;
+    background: linear-gradient(90deg, #00f0ff, #ffbf3c, #ff2e55);
+  }
+  .veh-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11.5px; font-weight: 800;
+  }
+  #hud-vehicle-name { color: #ffffff; }
+  #hud-vehicle-class { color: var(--coral); }
+  .radio-row {
+    margin-top: 6px; padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 700; color: var(--cyan);
+  }
+
+  /* Pause Map & Career Dashboard Overlay (Shot 3) */
+  #pause-map-modal {
+    position: fixed; inset: 0; z-index: 40;
+    background: rgba(6, 10, 19, 0.92);
+    backdrop-filter: blur(12px);
+    display: none; pointer-events: auto;
+    padding: 22px 28px;
+  }
+  #pause-map-modal.visible { display: flex; flex-direction: column; gap: 14px; }
+  .pause-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid rgba(0, 240, 255, 0.35);
+    padding-bottom: 10px;
+  }
+  .pause-brand {
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  .pause-brand h1 {
+    margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 2px;
+    background: linear-gradient(90deg, #ff4d79, #ffbf3c, #00f0ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .pause-tabs {
+    display: flex; gap: 8px;
+  }
+  .pause-tab {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; font-weight: 800; font-size: 12px;
+    padding: 6px 14px; border-radius: 6px; letter-spacing: 1px;
+    cursor: pointer;
+  }
+  .pause-tab.active {
+    background: linear-gradient(135deg, #ff4d79, #ff7e29);
+    border-color: #ffbf3c;
+  }
+  .pause-body {
+    flex: 1; display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 18px; min-height: 0;
+  }
+  .map-panel {
+    background: rgba(11, 18, 33, 0.95);
+    border: 1.5px solid rgba(0, 240, 255, 0.4);
+    border-radius: 12px; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #full-map-canvas {
+    width: 100%; flex: 1; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: #071224;
+  }
+  .map-legend {
+    display: flex; justify-content: space-between; flex-wrap: wrap;
+    font-size: 11px; font-weight: 800; color: #d4e4ff;
+    padding: 4px 6px;
+  }
+  .stats-column {
+    display: flex; flex-direction: column; gap: 12px;
+    overflow-y: auto;
+  }
+  .dash-card {
+    background: rgba(12, 20, 37, 0.94);
+    border: 1px solid rgba(255, 191, 60, 0.38);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .dash-card h3 {
+    margin: 0 0 8px 0; font-size: 13px; font-weight: 900;
+    color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+  .mission-list-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    font-size: 11px; font-weight: 700;
+  }
+  .mission-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.04);
+    padding: 4px 8px; border-radius: 5px;
+    border-left: 3px solid var(--cyan);
+  }
+  .medal {
+    font-weight: 900; font-size: 10px; padding: 1px 5px; border-radius: 3px;
+  }
+  .medal.G { background: #ffbf3c; color: #000; }
+  .medal.S { background: #c0d0e8; color: #000; }
+  .medal.ACTIVE { background: #ff4d79; color: #fff; }
+  .medal.OPEN { background: rgba(0,240,255,0.2); color: #00f0ff; }
+
+  .career-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .stat-box {
+    background: rgba(0, 240, 255, 0.07);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 7px; padding: 7px; text-align: center;
+  }
+  .stat-val { font-size: 16px; font-weight: 900; color: #fff; }
+  .stat-lbl { font-size: 10px; font-weight: 700; color: var(--muted); }
+
+  .save-slots-grid {
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .save-slot-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 7px; padding: 7px 10px;
+  }
+  .save-slot-info { font-size: 11.5px; font-weight: 800; }
+  .save-slot-sub { font-size: 10px; color: var(--cyan); }
+  .save-slot-btns { display: flex; gap: 6px; }
+  .btn-small {
+    background: var(--cyan); color: #06101e;
+    border: none; border-radius: 4px; padding: 4px 9px;
+    font-size: 10.5px; font-weight: 900; cursor: pointer;
+  }
+  .btn-small.save { background: var(--gold); }
+
+  /* Title Screen Overlay (Shot 4) */
+  #title-screen-modal {
+    position: fixed; inset: 0; z-index: 50;
+    background: linear-gradient(90deg, rgba(6, 10, 20, 0.9) 0%, rgba(6, 10, 20, 0.55) 55%, rgba(6, 10, 20, 0.78) 100%);
+    display: none; pointer-events: auto;
+    padding: 36px 48px;
+  }
+  #title-screen-modal.visible {
+    display: flex; justify-content: space-between; align-items: stretch;
+  }
+  .title-left {
+    display: flex; flex-direction: column; justify-content: space-between;
+    max-width: 560px;
+  }
+  .title-badge {
+    display: inline-block;
+    background: rgba(255, 77, 121, 0.2);
+    border: 1px solid var(--coral);
+    color: var(--gold); font-size: 11px; font-weight: 900;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: 2px;
+  }
+  .title-logo {
+    font-size: 64px; font-weight: 900; line-height: 0.95;
+    letter-spacing: 3px; margin: 10px 0 4px 0;
+    background: linear-gradient(135deg, #ffffff 0%, #ffbf3c 48%, #ff4d79 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 6px 22px rgba(255, 77, 121, 0.45));
+  }
+  .title-sub {
+    font-size: 20px; font-weight: 800; color: var(--cyan);
+    letter-spacing: 5px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .title-desc {
+    font-size: 13.5px; line-height: 1.5; color: #dbe7ff;
+    background: rgba(10, 17, 32, 0.78);
+    border-left: 4px solid var(--gold);
+    padding: 10px 14px; border-radius: 6px;
+  }
+  .title-actions {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 14px;
+  }
+  .title-btn {
+    background: linear-gradient(135deg, #ff4d79, #ff7e29);
+    border: 1.5px solid #ffbf3c;
+    color: #fff; font-size: 15px; font-weight: 900;
+    padding: 12px 22px; border-radius: 8px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; text-align: left;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 8px 22px rgba(255, 77, 121, 0.38);
+  }
+  .title-btn.secondary {
+    background: rgba(12, 22, 42, 0.88);
+    border-color: rgba(0, 240, 255, 0.45);
+    box-shadow: none;
+  }
+  .title-right {
+    width: 410px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    gap: 14px;
+  }
+  .title-panel {
+    background: rgba(10, 16, 30, 0.88);
+    border: 1.5px solid rgba(0, 240, 255, 0.38);
+    border-radius: 12px; padding: 14px 16px;
+    backdrop-filter: blur(10px);
+  }
+  .title-panel h3 {
+    margin: 0 0 10px 0; font-size: 13px; font-weight: 900;
+    color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .controls-table {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .ctrl-item {
+    background: rgba(255,255,255,0.04);
+    padding: 5px 8px; border-radius: 5px;
+    display: flex; justify-content: space-between;
+  }
+  .ctrl-k { color: var(--gold); font-weight: 900; }
+</style>
+</head>
+<body>
+  <canvas id="game-canvas" aria-label="CORAL REIGN — Palma Dorada 3D Open World"></canvas>
+
+  <div id="ui-layer">
+    <div id="crosshair"></div>
+
+    <!-- Top-Center Mission Objective Banner -->
+    <div id="mission-banner">
+      <div class="mission-head">
+        <span id="hud-mission-stage">STORY MISSION 04 / 10 • STAGE 2/3</span>
+        <span class="mission-reward" id="hud-mission-reward">+$45,000 • +1,200 RESPECT</span>
+      </div>
+      <div class="mission-title" id="hud-mission-title">SUNSET GOLD CONVOY HEIST</div>
+      <div class="mission-obj">
+        <span id="hud-mission-obj">Hijack the armored bullion transport &amp; evade 4-Star Tactical Police along Solana Strip</span>
+        <span id="hud-mission-dist" style="color:#ffbf3c;font-weight:900;">180m</span>
+      </div>
+    </div>
+
+    <!-- Top-Right Cash, Wanted Stars, Weapon & Police Dispatch -->
+    <div id="hud-top-right">
+      <div class="hud-card">
+        <div class="cash-row">
+          <span id="hud-cash">$248,500</span>
+          <span id="hud-rank">RANK 14 • KINGPIN</span>
+        </div>
+        <div class="xp-bar-wrap"><div id="hud-xp-fill"></div></div>
+        <div class="wanted-row">
+          <span class="wanted-label" id="hud-wanted-label">WANTED • TACTICAL PURSUIT</span>
+          <span id="hud-stars">
+            <span class="star-on">★</span><span class="star-on">★</span><span class="star-on">★</span><span class="star-on">★</span><span class="star-off">★</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="hud-card">
+        <div class="weapon-row">
+          <span id="hud-weapon-name">[4] CARBINE AR-9</span>
+          <span id="hud-weapon-ammo">30 / 210</span>
+        </div>
+        <div class="crew-row">
+          <div class="crew-pill ready" id="crew-z">[Z] PLATES</div>
+          <div class="crew-pill ready" id="crew-x">[X] REPAIR</div>
+          <div class="crew-pill ready" id="crew-c">[C] JAMMER</div>
+        </div>
+      </div>
+
+      <div class="hud-card" id="dispatch-panel">
+        <div class="dispatch-header">
+          <span><span class="dispatch-live-dot"></span>PALMA PD TACTICAL DISPATCH</span>
+          <span id="dispatch-code">CODE RED</span>
+        </div>
+        <ul id="dispatch-list">
+          <li><span class="unit-tag">CORAL-12</span><span class="unit-status">RAMMING INTERCEPT (24m)</span></li>
+          <li><span class="unit-tag">MARINA-4</span><span class="unit-status">FLANKING BOULEVARD (38m)</span></li>
+          <li><span class="unit-tag">AIR-1 HELI</span><span class="unit-status">SPOTLIGHT LOCKED</span></li>
+          <li><span class="unit-tag">TAC-9</span><span class="unit-status">SPIKE BARRICADE AHEAD</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom-Left Minimap & Vitals -->
+    <div id="hud-bottom-left">
+      <div class="district-header">
+        <span id="hud-district">SOLANA STRIP</span>
+        <span id="hud-clock">18:42 • GOLDEN HOUR</span>
+      </div>
+      <canvas id="minimap-canvas" width="224" height="152"></canvas>
+      <div class="vitals-bars">
+        <div class="vital-track"><div id="hud-health-fill"></div></div>
+        <div class="vital-track"><div id="hud-armor-fill"></div></div>
+        <div class="vital-track"><div id="hud-stamina-fill"></div></div>
+      </div>
+      <div class="vitals-labels">
+        <span id="hud-hp-text">HP 100%</span>
+        <span id="hud-ar-text">ARMOR 85%</span>
+        <span>[M] CITY MAP</span>
+      </div>
+    </div>
+
+    <!-- Bottom-Center Action Prompt & Crew Comms -->
+    <div id="hud-bottom-center">
+      <div id="context-prompt">
+        <span class="key-badge">F</span><span id="prompt-text">HIJACK CORAL VORTEX GT • [SPACE] DRIFT • [LMB] FIRE</span>
+      </div>
+      <div id="dialogue-bar">
+        <canvas id="dialogue-avatar" width="42" height="42"></canvas>
+        <div class="dialogue-content">
+          <div id="dialogue-speaker">VALERIA • CREW TACTICAL LEAD</div>
+          <div id="dialogue-line">"Chopper spotlight is on your tail, Dani! Cut through Coral Marina bridge to shake TAC-9!"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right Vehicle Telemetry & Radio -->
+    <div id="hud-bottom-right">
+      <div class="speed-row">
+        <div><span id="hud-speed">142</span><span class="speed-unit">MPH</span></div>
+        <span id="hud-gear">GEAR 5</span>
+      </div>
+      <div class="rpm-track"><div id="hud-rpm-fill"></div></div>
+      <div class="veh-meta">
+        <span id="hud-vehicle-name">CORAL VORTEX GT</span>
+        <span id="hud-vehicle-class">EXOTIC • 96% HP</span>
+      </div>
+      <div class="radio-row">
+        <span id="hud-radio">♪ 98.4 SOLANA SYNTH FM</span>
+        <span>[R] STATION</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause Map, Missions & Save Slots Modal -->
+  <div id="pause-map-modal">
+    <div class="pause-header">
+      <div class="pause-brand">
+        <h1>CORAL REIGN • PALMA DORADA</h1>
+        <span style="color:var(--cyan);font-size:13px;font-weight:800;">6 DISTRICTS • 10 STORY HEISTS • 39 SIDE ACTIVITIES</span>
+      </div>
+      <div class="pause-tabs">
+        <button class="pause-tab active" id="btn-tab-map">WORLD MAP &amp; GPS</button>
+        <button class="pause-tab" id="btn-tab-missions">10 STORY JOBS</button>
+        <button class="pause-tab" id="btn-tab-saves">3 SAVE SLOTS</button>
+        <button class="pause-tab" id="btn-resume-game">RESUME [ESC]</button>
+      </div>
+    </div>
+    <div class="pause-body">
+      <div class="map-panel">
+        <canvas id="full-map-canvas" width="680" height="470"></canvas>
+        <div class="map-legend">
+          <span style="color:#4eff91;">● PLAYER &amp; GPS ROUTE</span>
+          <span style="color:#ffbf3c;">★ STORY HEISTS (10)</span>
+          <span style="color:#00f0ff;">◆ STREET RACES (5)</span>
+          <span style="color:#ff4d79;">▲ STUNT JUMPS (10)</span>
+          <span style="color:#ffd166;">● GOLDEN SHELLS (24)</span>
+        </div>
+      </div>
+      <div class="stats-column">
+        <div class="dash-card">
+          <h3><span>STORY CAMPAIGN PROGRESS</span><span id="pause-completion-pct">68% COMPLETE</span></h3>
+          <div class="mission-list-grid" id="pause-mission-grid"></div>
+        </div>
+        <div class="dash-card">
+          <h3><span>CAREER SYNDICATE LEDGER</span><span>RANK 14 KINGPIN</span></h3>
+          <div class="career-grid">
+            <div class="stat-box"><div class="stat-val" id="stat-networth">$642,800</div><div class="stat-lbl">SYNDICATE TAKE</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-shells">18 / 24</div><div class="stat-lbl">GOLDEN SHELLS</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-stunts">8 / 10</div><div class="stat-lbl">STUNT JUMPS</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-races">4 / 5</div><div class="stat-lbl">STREET RACES</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-hijacks">34</div><div class="stat-lbl">CARS HIJACKED</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-evasions">19</div><div class="stat-lbl">5★ EVASIONS</div></div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <h3><span>LOCALSTORAGE SAVE SLOTS</span><span>AUTO-SYNC READY</span></h3>
+          <div class="save-slots-grid" id="pause-save-slots"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title Screen Overlay -->
+  <div id="title-screen-modal">
+    <div class="title-left">
+      <div>
+        <span class="title-badge">ORIGINAL 3D WEBGL OPEN-WORLD CRIME SYNDICATE</span>
+        <h1 class="title-logo">CORAL REIGN</h1>
+        <div class="title-sub">PALMA DORADA METROPOLIS</div>
+        <div class="title-desc">
+          Rule the sun-soaked Art-Deco coast of <strong>Palma Dorada</strong> across 6 neon districts. Hijack exotic cruisers, command your heist crew (<em>Valeria, Rafa, Mateo</em>), execute 10 multi-stage syndicate missions, and outrun 5-Star tactical police &amp; spotlight helicopters.
+        </div>
+      </div>
+      <div class="title-actions">
+        <button class="title-btn" id="btn-continue-career">
+          <span>▶ CONTINUE SYNDICATE CAREER (SLOT 1 • 68%)</span>
+          <span>SOLANA STRIP</span>
+        </button>
+        <button class="title-btn secondary" id="btn-new-career">
+          <span>★ NEW HEIST CAMPAIGN (PALMA DORADA)</span>
+          <span>10 MISSIONS</span>
+        </button>
+        <button class="title-btn secondary" id="btn-open-world-freeroam">
+          <span>⚡ FREE ROAM SANDBOX &amp; HIJACK TOUR</span>
+          <span>ALL 6 DISTRICTS</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="title-right">
+      <div class="title-panel">
+        <h3>SELECT CAREER SAVE SLOT (LOCALSTORAGE)</h3>
+        <div class="save-slots-grid" id="title-save-slots"></div>
+      </div>
+      <div class="title-panel">
+        <h3>KEYBOARD &amp; MOUSE CONTROLS</h3>
+        <div class="controls-table">
+          <div class="ctrl-item"><span>DRIVE / MOVE</span><span class="ctrl-k">W A S D</span></div>
+          <div class="ctrl-item"><span>HIJACK / EXIT CAR</span><span class="ctrl-k">F</span></div>
+          <div class="ctrl-item"><span>FIRE / MELEE</span><span class="ctrl-k">LEFT CLICK</span></div>
+          <div class="ctrl-item"><span>DRIFT / SPRINT</span><span class="ctrl-k">SPACE / SHIFT</span></div>
+          <div class="ctrl-item"><span>WEAPONS 1–6</span><span class="ctrl-k">1 2 3 4 5 6</span></div>
+          <div class="ctrl-item"><span>CREW ABILITIES</span><span class="ctrl-k">Z / X / C</span></div>
+          <div class="ctrl-item"><span>CITY MAP &amp; GPS</span><span class="ctrl-k">M</span></div>
+          <div class="ctrl-item"><span>RADIO / PAUSE</span><span class="ctrl-k">R / ESC</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./vendor/three.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
