@@ -25,6 +25,49 @@ export function createPalmTreeMesh(THREE, scale = 1) {
  return palm;
 }
 
+function createPinkScooterRiderMesh(THREE) {
+ const g = new THREE.Group();
+ const Std = (p) => new THREE.MeshStandardMaterial(p), Bas = (p) => new THREE.MeshBasicMaterial(p);
+ const pinkMat = Std({ color: 0xff4da6, emissive: 0x3b0824, roughness: 0.22, metalness: 0.3 });
+ const chromeMat = Std({ color: 0xeaf2ff, roughness: 0.15, metalness: 0.9 });
+ const darkMat = Std({ color: 0x161c28, roughness: 0.65 });
+ const skinMat = Std({ color: 0xd99b72, roughness: 0.5 });
+ const tealMat = Std({ color: 0x00e5ff, roughness: 0.35 });
+ const whiteMat = Std({ color: 0xfff8f0, roughness: 0.25 });
+ const M = (geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  if (rx) m.rotation.x = rx;
+  if (ry) m.rotation.y = ry;
+  if (rz) m.rotation.z = rz;
+  g.add(m);
+  return m;
+ };
+
+ // Wheels, retro Vespa body, seat, handlebars & lights
+ for (const wz of [-0.62, 0.62]) {
+  M(new THREE.CylinderGeometry(0.28, 0.28, 0.16, 12), darkMat, 0, 0.28, wz, 0, 0, Math.PI / 2);
+  M(new THREE.CylinderGeometry(0.16, 0.16, 0.17, 10), chromeMat, 0, 0.28, wz, 0, 0, Math.PI / 2);
+ }
+ M(new THREE.BoxGeometry(0.42, 0.22, 1.35), pinkMat, 0, 0.36, 0);
+ M(new THREE.BoxGeometry(0.46, 0.48, 0.72), pinkMat, 0, 0.56, -0.38);
+ M(new THREE.BoxGeometry(0.36, 0.76, 0.24), pinkMat, 0, 0.72, 0.52, -0.22, 0, 0);
+ M(new THREE.BoxGeometry(0.34, 0.14, 0.64), darkMat, 0, 0.84, -0.22);
+ M(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8), chromeMat, 0, 1.12, 0.44, 0, 0, Math.PI / 2);
+ M(new THREE.SphereGeometry(0.11, 10, 10), Bas({ color: 0xfff6cc }), 0, 1.06, 0.58);
+ M(new THREE.BoxGeometry(0.2, 0.1, 0.08), Bas({ color: 0xff2248 }), 0, 0.66, -0.76);
+
+ // Rider in tropical teal top + pink helmet
+ M(new THREE.BoxGeometry(0.36, 0.52, 0.26), tealMat, 0, 1.16, -0.14, 0.18, 0, 0);
+ M(new THREE.SphereGeometry(0.19, 12, 12), whiteMat, 0, 1.56, -0.04);
+ M(new THREE.BoxGeometry(0.26, 0.08, 0.12), Bas({ color: 0x111a2b }), 0, 1.55, 0.12);
+ for (const sx of [-0.22, 0.22]) {
+  M(new THREE.CylinderGeometry(0.06, 0.05, 0.48, 8), skinMat, sx, 1.24, 0.16, -0.95, 0, 0);
+  M(new THREE.CylinderGeometry(0.07, 0.06, 0.46, 8), darkMat, sx * 0.85, 0.72, 0.04, -0.55, 0, 0);
+ }
+ return g;
+}
+
 export function buildWorldProps(scene) {
  const THREE = window.THREE;
  const Std = (p) => new THREE.MeshStandardMaterial(p), Bas = (p) => new THREE.MeshBasicMaterial(p);
@@ -64,16 +107,31 @@ export function buildWorldProps(scene) {
  }
 
  const uCols = [0xff4d79, 0x00d8d6, 0xffbe3d, 0xff7e29, 0x38d864], whiteMat = Std({ color: 0xfff8eb, roughness: 0.4 });
- for (let bz = -360; bz <= 400; bz += 18) {
-  const canopyMat = Std({ color: uCols[Math.abs(Math.round(bz / 18)) % 5], roughness: 0.35 });
-  [248 + ((Math.abs(bz) % 3) * 6), 262, 194].forEach((ux, k) => {
+ for (let bz = -360; bz <= 400; bz += 14) {
+  const inHeroView = bz >= -90 && bz <= 80;
+  if (!inHeroView && (Math.abs(bz) % 28 === 14)) continue;
+  const canopyMat = Std({ color: uCols[Math.abs(Math.round(bz / 14)) % 5], roughness: 0.35 });
+  const xs = inHeroView ? [238.5 + (Math.abs(bz) % 3) * 1.4, 248.0, 258.5] : [248 + ((Math.abs(bz) % 3) * 6), 262, 194];
+  xs.forEach((ux, k) => {
    const umb = new THREE.Group();
    addM(umb, new THREE.CylinderGeometry(0.08, 0.08, 2.7, 6), whiteMat, 0, 1.35, 0);
-   addM(umb, new THREE.ConeGeometry(2.3, 0.95, 8), canopyMat, 0, 2.65, 0);
+   addM(umb, new THREE.ConeGeometry(2.45, 1.0, 8), canopyMat, 0, 2.65, 0);
    for (const lx of [-1.3, 1.3]) addM(umb, new THREE.BoxGeometry(0.95, 0.32, 2.2), whiteMat, lx, 0.22, 0.3);
-   umb.position.set(ux, 0.05, bz + k * 4.5); group.add(umb);
+   umb.position.set(ux, 0.05, bz + k * 3.8); group.add(umb);
   });
  }
+
+ // Extra coastal palms & beachfront pink scooters framing Ocean Drive boardwalk
+ for (let bz = -84; bz <= 56; bz += 16) {
+  if (ROAD_Z.some((rz) => Math.abs(bz - rz) < 13)) continue;
+  const pBeach = createPalmTreeMesh(THREE, 0.92 + ((Math.abs(bz) % 4) * 0.07));
+  pBeach.position.set(235.5, 0, bz); pBeach.rotation.y = (bz * 0.45) % (Math.PI * 2);
+  group.add(pBeach); palmCrowns.push(pBeach);
+ }
+ [[233.1, 21.8, Math.PI - 0.08], [233.8, -24.5, 0.12]].forEach(([sx, sz, srot]) => {
+  const sc = createPinkScooterRiderMesh(THREE);
+  sc.position.set(sx, 0, sz); sc.rotation.y = srot; group.add(sc);
+ });
 
  const crateMat = Std({ color: 0xc87d32, roughness: 0.65 }), bandMat = Std({ color: 0x1d2636, roughness: 0.4, metalness: 0.7 });
  [[215.2, 363.2, 1.15, 0.25], [222.8, 364.2, 1.1, -0.35], [219.2, 360.2, 0.95, 0.12]].forEach(([cx, cz, s, rot]) => {

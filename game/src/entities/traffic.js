@@ -29,14 +29,23 @@ export function initTrafficVehicles(scene, state) {
    for (const v of vehicles) {
     if (v.isPlayerControlled && state.player.inVehicle) {
      updatePlayerVehiclePhysics(v, state, colliders, dt);
-    } else if (!v.isPolice && v.id !== 'player_car') {
+    } else if (!v.isPolice && v.id !== 'player_car' && !v.wrecked) {
      v.x += Math.sin(v.rotY) * v.speed * dt;
      v.z += Math.cos(v.rotY) * v.speed * dt;
      if (v.z > 420) v.z = -420;
      if (v.z < -420) v.z = 420;
     }
+    if (v.wrecked && !v._charredApplied) {
+     v._charredApplied = true;
+     v.mesh.traverse((o) => {
+      if (o.isMesh && o.material && !o.material.transparent && o.material.color && o.material.type !== 'MeshBasicMaterial') {
+       o.material = o.material.clone();
+       o.material.color.multiplyScalar(0.32);
+      }
+     });
+    }
     v.mesh.position.set(v.x, v.y, v.z);
-    v.mesh.rotation.y = v.rotY + (v.driftAngle || 0);
+    v.mesh.rotation.set(v.tiltX || 0, v.rotY + (v.driftAngle || 0), v.tiltZ || 0);
     for (const w of (v.mesh.userData.wheels || [])) w.rotation.x += v.speed * dt * 1.4;
    }
   },

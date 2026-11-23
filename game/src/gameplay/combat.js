@@ -23,48 +23,57 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
   const holder = new THREE.Group();
   holder.position.set(x, y, z);
 
-  // Glowing core fireball + warm additive fire halo (no solid black rock polygons)
-  const coreA = new THREE.Mesh(new THREE.SphereGeometry(0.38 * s, 12, 10), Bas({ color: 0xfff5c0, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false }));
-  coreA.position.y = 0.24 * s;
-  const coreB = new THREE.Mesh(new THREE.SphereGeometry(0.76 * s, 12, 10), Bas({ color: 0xff7b19, transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false }));
-  coreB.position.y = 0.34 * s; coreB.scale.set(1.25, 0.9, 1.15);
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.35 * s, 12, 10), Bas({ color: 0xff4210, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
-  halo.position.y = 0.42 * s;
-  holder.add(coreA, coreB, halo);
+  // Multi-layered luminous orange-amber-white fireball + billowing lobes (no black rock polygons)
+  const addBlob = (r, ox, oy, oz, sx, sy, sz, color, opacity, additive = true) => {
+   const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r * s, 14, 12),
+    Bas({ color, transparent: true, opacity, ...(additive ? { blending: THREE.AdditiveBlending } : {}), depthWrite: false })
+   );
+   m.position.set(ox * s, oy * s, oz * s);
+   m.scale.set(sx, sy, sz);
+   holder.add(m);
+  };
 
-  // Radial flame tongues
-  const fCols = [0xffc93b, 0xff8519, 0xff4d1a, 0xffa326, 0xff6214];
-  for (let i = 0; i < 12; i++) {
-   const az = (i / 12) * Math.PI * 2 + (i % 3) * 0.2, el = 0.25 + (i % 3) * 0.28;
+  addBlob(0.58, 0, 0.36, 0, 1.15, 0.95, 1.1, 0xfff8d6, 0.92);
+  addBlob(0.98, 0, 0.48, 0, 1.28, 1.05, 1.2, 0xff9e22, 0.72);
+  addBlob(1.62, 0, 0.56, 0, 1.35, 1.05, 1.25, 0xff4512, 0.36);
+  [[-0.55, 0.52, 0.24, 0.72, 0xffb833, 0.62], [0.58, 0.46, -0.18, 0.68, 0xff7b19, 0.6], [0.12, 1.05, 0.08, 0.74, 0xffaa2b, 0.58], [-0.28, 0.88, -0.26, 0.62, 0xff5a14, 0.52], [0.36, 0.92, 0.28, 0.58, 0xffd25a, 0.55]].forEach(([ox, oy, oz, r, col, op]) => {
+   addBlob(r, ox, oy, oz, 1.18, 0.96, 1.12, col, op);
+  });
+
+  // Upward & radial flame tongues
+  const fCols = [0xffe066, 0xff9e22, 0xff5218, 0xffb833, 0xff6a14];
+  for (let i = 0; i < 14; i++) {
+   const az = (i / 14) * Math.PI * 2 + (i % 3) * 0.22, el = 0.32 + (i % 3) * 0.3;
    const t = new THREE.Mesh(
-    new THREE.ConeGeometry((0.24 + (i % 2) * 0.1) * s, (0.85 + (i % 3) * 0.32) * s, 7),
+    new THREE.ConeGeometry((0.32 + (i % 2) * 0.14) * s, (1.15 + (i % 3) * 0.42) * s, 8),
     Bas({ color: fCols[i % 5], transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending, depthWrite: false })
    );
-   t.position.set(Math.cos(az) * 0.36 * s, (0.28 + (i % 3) * 0.2) * s, Math.sin(az) * 0.36 * s);
-   t.rotation.set(Math.sin(az) * (1.57 - el), 0, -Math.cos(az) * (1.57 - el));
+   t.position.set(Math.cos(az) * 0.46 * s, (0.42 + (i % 3) * 0.26) * s, Math.sin(az) * 0.46 * s);
+   t.rotation.set(Math.sin(az) * (1.52 - el), 0, -Math.cos(az) * (1.52 - el));
    holder.add(t);
   }
 
-  // Soft low-opacity warm smoke wisps
-  [[-0.32, 1.05, -0.18, 0.62, 0x8f5646, 0.22], [0.34, 1.28, 0.15, 0.68, 0x784a48, 0.19], [-0.1, 1.55, 0.2, 0.74, 0x5c3e44, 0.16]].forEach(([ox, oy, oz, r, c, op]) => {
-   const puff = new THREE.Mesh(new THREE.SphereGeometry(r * s, 12, 10), Bas({ color: c, transparent: true, opacity: op, depthWrite: false }));
-   puff.position.set(ox * s, oy * s, oz * s); puff.scale.set(1.25, 0.85, 1.15);
-   holder.add(puff);
+  // Soft warm translucent smoke plume billowing above the fireball
+  [[-0.36, 1.42, -0.15, 0.78, 0x8f5544, 0.3], [0.42, 1.72, 0.16, 0.86, 0x764846, 0.28], [-0.14, 2.15, 0.18, 0.95, 0x623e42, 0.25], [0.22, 2.58, -0.12, 1.05, 0x51363c, 0.22], [-0.05, 3.05, 0.04, 1.12, 0x453038, 0.17]].forEach(([ox, oy, oz, r, c, op]) => {
+   addBlob(r, ox, oy, oz, 1.32, 0.92, 1.2, c, op, false);
   });
 
-  // Radial flying spark streaks
-  for (let i = 0; i < 16; i++) {
-   const ang = (i / 16) * Math.PI * 2, d = (0.95 + (i % 4) * 0.34) * s, h = (0.3 + (i % 5) * 0.32) * s;
-   const em = new THREE.Mesh(new THREE.BoxGeometry(0.045 * s, 0.045 * s, (0.58 + (i % 3) * 0.24) * s), Bas({ color: i % 2 === 0 ? 0xffe878 : 0xff6a14, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false }));
+  // Bright radial spark streaks
+  for (let i = 0; i < 20; i++) {
+   const ang = (i / 20) * Math.PI * 2, d = (1.15 + (i % 4) * 0.42) * s, h = (0.35 + (i % 5) * 0.38) * s;
+   const em = new THREE.Mesh(new THREE.BoxGeometry(0.055 * s, 0.055 * s, (0.72 + (i % 3) * 0.28) * s), Bas({ color: i % 2 === 0 ? 0xfff08a : 0xff7718, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false }));
    em.position.set(Math.cos(ang) * d, h, Math.sin(ang) * d); em.rotation.set(0.45 + (i % 3) * 0.2, -ang, 0);
    holder.add(em);
   }
 
-  const sc = new THREE.Mesh(new THREE.CircleGeometry(1.55 * s, 18), Bas({ color: 0x161218, transparent: true, opacity: 0.45, depthWrite: false }));
-  sc.rotation.x = -Math.PI / 2; sc.position.y = -y + 0.07;
-  const sr = new THREE.Mesh(new THREE.RingGeometry(1.15 * s, 1.75 * s, 24), Bas({ color: 0xff8a2b, transparent: true, opacity: 0.68, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
-  sr.rotation.x = -Math.PI / 2; sr.position.y = -y + 0.09;
-  holder.add(sc, sr); fxGroup.add(holder);
+  const glowDisc = new THREE.Mesh(new THREE.CircleGeometry(2.35 * s, 22), Bas({ color: 0xff7e24, transparent: true, opacity: 0.44, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glowDisc.rotation.x = -Math.PI / 2; glowDisc.position.y = -y + 0.075;
+  const sc = new THREE.Mesh(new THREE.CircleGeometry(1.65 * s, 18), Bas({ color: 0x1a1218, transparent: true, opacity: 0.42, depthWrite: false }));
+  sc.rotation.x = -Math.PI / 2; sc.position.y = -y + 0.068;
+  const sr = new THREE.Mesh(new THREE.RingGeometry(1.25 * s, 1.95 * s, 24), Bas({ color: 0xff9a2e, transparent: true, opacity: 0.72, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sr.rotation.x = -Math.PI / 2; sr.position.y = -y + 0.095;
+  holder.add(sc, glowDisc, sr); fxGroup.add(holder);
   explosions.push({ mesh: holder, ttl: 0.85 });
  }
 

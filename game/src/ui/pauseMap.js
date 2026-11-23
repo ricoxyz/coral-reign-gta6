@@ -10,49 +10,59 @@ const C = (c, x, y, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r
 const L = (c, x1, y1, x2, y2, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
 const $ = (id) => document.getElementById(id);
 
-function drawBlock(ctx, id, bx, by, bw, bh, ix, iz) {
- B(ctx, bx, by, bw, bh, '#132034');
- ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
+const DISTRICT_BLOCK_THEME = {
+ coral_marina: { base: '#1a525c', court: '#198699', roofs: ['#4be8cc', '#75f2da', '#2ec4b6'], acc: '#c9fff5' },
+ solana_strip: { base: '#592640', court: '#1696ab', roofs: ['#ff6e96', '#ff94b3', '#ff9978'], acc: '#ffd6e2' },
+ vidrio_downtown: { base: '#1b4069', court: '#276094', roofs: ['#5cb8ff', '#85ccff', '#3fa2eb'], acc: '#d4eeff' },
+ mercado_viejo: { base: '#593716', court: '#75461b', roofs: ['#ffbe4d', '#ffd46b', '#ff993b'], acc: '#fff0c2' },
+ palma_pier: { base: '#194d36', court: '#236b4b', roofs: ['#4be88c', '#76f2a8', '#29c46b'], acc: '#ccffe0' },
+ mirador_heights: { base: '#3d2a61', court: '#533982', roofs: ['#bf8cff', '#d4b0ff', '#a16ef5'], acc: '#ebd9ff' },
+};
 
- const pad = 4, iw = bw - pad * 2, ih = bh - pad * 2;
+function drawBlock(ctx, id, bx, by, bw, bh, ix, iz) {
+ const theme = DISTRICT_BLOCK_THEME[id] || DISTRICT_BLOCK_THEME.vidrio_downtown;
+ B(ctx, bx, by, bw, bh, theme.base);
+ ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
+
+ const pad = 3.5, iw = bw - pad * 2, ih = bh - pad * 2;
  if (iw < 8 || ih < 8) return;
 
- const roof = (rx, ry, rw, rh, fill, accent) => {
-  B(ctx, rx + 2, ry + 2, rw, rh, 'rgba(5,10,20,0.45)');
+ const roof = (rx, ry, rw, rh, fill) => {
+  B(ctx, rx + 2, ry + 2, rw, rh, 'rgba(5,10,20,0.42)');
   B(ctx, rx, ry, rw, rh, fill);
-  if (accent) B(ctx, rx, ry, rw, 2.5, accent);
+  B(ctx, rx, ry, rw, 2.5, theme.acc);
  };
 
+ const r0 = theme.roofs[(ix + iz) % 3], r1 = theme.roofs[(ix + iz + 1) % 3], r2 = theme.roofs[(ix + iz + 2) % 3];
  if (id === 'solana_strip') {
-  const cols = ['#3e253d', '#4b2a42', '#352b46'], acc = ['#ff4d7999', '#ff9f4388', '#00f0ff88'];
-  roof(bx + pad, by + pad, iw * 0.46, ih * 0.56, cols[(ix + iz) % 3], acc[(ix + iz) % 3]);
-  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.42, cols[(ix + iz + 1) % 3], acc[(ix + iz + 1) % 3]);
-  B(ctx, bx + pad + iw * 0.54, by + pad + ih * 0.52, iw * 0.44, ih * 0.44, '#0c4f69');
-  B(ctx, bx + pad, by + pad + ih * 0.64, iw * 0.46, ih * 0.34, '#242c44');
+  roof(bx + pad, by + pad, iw * 0.46, ih * 0.54, r0);
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.44, r1);
+  B(ctx, bx + pad + iw * 0.54, by + pad + ih * 0.52, iw * 0.44, ih * 0.44, theme.court);
+  roof(bx + pad, by + pad + ih * 0.62, iw * 0.46, ih * 0.36, r2);
  } else if (id === 'coral_marina') {
-  roof(bx + pad, by + pad, iw * 0.58, ih * 0.44, '#183b54', '#00f0ff88');
-  roof(bx + pad + iw * 0.64, by + pad, iw * 0.36, ih * 0.94, '#1d4661', '#2ec4b688');
-  B(ctx, bx + pad, by + pad + ih * 0.52, iw * 0.58, ih * 0.44, '#0f283d');
-  B(ctx, bx + pad + 4, by + pad + ih * 0.62, iw * 0.42, ih * 0.22, '#1a5a75');
+  roof(bx + pad, by + pad, iw * 0.58, ih * 0.46, r0);
+  roof(bx + pad + iw * 0.64, by + pad, iw * 0.36, ih * 0.94, r1);
+  B(ctx, bx + pad, by + pad + ih * 0.52, iw * 0.58, ih * 0.44, theme.court);
+  roof(bx + pad + 4, by + pad + ih * 0.6, iw * 0.42, ih * 0.26, r2);
  } else if (id === 'vidrio_downtown') {
-  roof(bx + pad, by + pad, iw * 0.46, ih * 0.46, '#203352', '#ffbf3c77');
-  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.54, '#263d61', '#00e5ff66');
-  roof(bx + pad, by + pad + ih * 0.54, iw * 0.46, ih * 0.44, '#1b2d47', '#ffbf3c66');
-  B(ctx, bx + pad + iw * 0.56, by + pad + ih * 0.62, iw * 0.4, ih * 0.32, '#17263d');
+  roof(bx + pad, by + pad, iw * 0.46, ih * 0.46, r0);
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.54, r1);
+  roof(bx + pad, by + pad + ih * 0.54, iw * 0.46, ih * 0.44, r2);
+  B(ctx, bx + pad + iw * 0.54, by + pad + ih * 0.6, iw * 0.44, ih * 0.36, theme.court);
  } else if (id === 'mercado_viejo') {
-  B(ctx, bx + pad, by + pad, iw, ih, '#1f192b');
-  roof(bx + pad, by + pad, iw * 0.44, ih * 0.44, '#472c2d', '#ff7e2988');
-  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.44, '#3d2838', '#ff4d7977');
-  roof(bx + pad, by + pad + ih * 0.54, iw * 0.98, ih * 0.42, '#422c30', '#ffbe3d77');
-  B(ctx, bx + pad + iw * 0.28, by + pad + ih * 0.32, iw * 0.44, ih * 0.32, '#191424');
+  roof(bx + pad, by + pad, iw * 0.46, ih * 0.44, r0);
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.44, r1);
+  roof(bx + pad, by + pad + ih * 0.52, iw * 0.98, ih * 0.44, r2);
+  B(ctx, bx + pad + iw * 0.3, by + pad + ih * 0.34, iw * 0.4, ih * 0.3, theme.court);
  } else if (id === 'palma_pier') {
-  B(ctx, bx + pad, by + pad, iw, ih, '#183635');
-  roof(bx + pad + 3, by + pad + 3, iw * 0.48, ih * 0.44, '#214d43', '#4eff9188');
-  roof(bx + pad + iw * 0.56, by + pad + ih * 0.48, iw * 0.4, ih * 0.46, '#382436', '#ff4d7988');
+  roof(bx + pad, by + pad, iw * 0.5, ih * 0.48, r0);
+  roof(bx + pad + iw * 0.54, by + pad + ih * 0.46, iw * 0.44, ih * 0.5, r1);
+  roof(bx + pad, by + pad + ih * 0.56, iw * 0.46, ih * 0.4, r2);
  } else {
-  B(ctx, bx + pad, by + pad, iw, ih, '#1c1f36');
-  roof(bx + pad, by + pad, iw * 0.5, ih * 0.46, '#2e294e', '#b978ff88');
-  roof(bx + pad + iw * 0.48, by + pad + ih * 0.54, iw * 0.5, ih * 0.44, '#272645', '#00f0ff66');
+  roof(bx + pad, by + pad, iw * 0.5, ih * 0.46, r0);
+  roof(bx + pad + iw * 0.54, by + pad, iw * 0.44, ih * 0.42, r1);
+  roof(bx + pad + iw * 0.46, by + pad + ih * 0.52, iw * 0.52, ih * 0.44, r2);
+  B(ctx, bx + pad, by + pad + ih * 0.54, iw * 0.4, ih * 0.4, theme.court);
  }
 }
 
@@ -85,20 +95,20 @@ export function renderFullPauseMap(state, saveSystem) {
  }
  const pierY = ty(365);
  B(ctx, beach - 4, pierY - 12, 64, 24, '#c98a5b'); C(ctx, beach + 44, pierY, 9, '#ff4d79'); C(ctx, beach + 44, pierY, 5, '#00f0ff');
- for (const d of DISTRICTS) B(ctx, tx(d.bounds.minX), ty(d.bounds.minZ), tx(d.bounds.maxX) - tx(d.bounds.minX), ty(d.bounds.maxZ) - ty(d.bounds.minZ), `${d.color}20`);
+ for (const d of DISTRICTS) B(ctx, tx(d.bounds.minX), ty(d.bounds.minZ), tx(d.bounds.maxX) - tx(d.bounds.minX), ty(d.bounds.maxZ) - ty(d.bounds.minZ), `${d.color}30`);
 
  const gx = [-440, ...ROAD_X], gz = [-530, ...ROAD_Z, 550];
  for (let ix = 0; ix < gx.length - 1; ix++) {
   for (let iz = 0; iz < gz.length - 1; iz++) {
    const cx = (gx[ix] + gx[ix + 1]) * 0.5, cz = (gz[iz] + gz[iz + 1]) * 0.5;
    const dist = DISTRICTS.find((d) => cx >= d.bounds.minX && cx <= d.bounds.maxX && cz >= d.bounds.minZ && cz <= d.bounds.maxZ);
-   const bx = tx(gx[ix]) + 5, by = ty(gz[iz]) + 5, bw = tx(gx[ix + 1]) - tx(gx[ix]) - 10, bh = ty(gz[iz + 1]) - ty(gz[iz]) - 10;
+   const bx = tx(gx[ix]) + 4.5, by = ty(gz[iz]) + 4.5, bw = tx(gx[ix + 1]) - tx(gx[ix]) - 9, bh = ty(gz[iz + 1]) - ty(gz[iz]) - 9;
    if (bw > 6 && bh > 6) drawBlock(ctx, dist ? dist.id : 'vidrio_downtown', bx, by, bw, bh, ix, iz);
   }
  }
 
- for (const rx of ROAD_X) L(ctx, tx(rx), 0, tx(rx), h, '#34435a', 6.2);
- for (const rz of ROAD_Z) L(ctx, 0, ty(rz), surf, ty(rz), '#34435a', 6.2);
+ for (const rx of ROAD_X) L(ctx, tx(rx), 0, tx(rx), h, '#243247', 6.2);
+ for (const rz of ROAD_Z) L(ctx, 0, ty(rz), surf, ty(rz), '#243247', 6.2);
 
  for (const d of DISTRICTS) {
   const x0 = tx(d.bounds.minX), y0 = ty(d.bounds.minZ), lblY = d.id === 'solana_strip' ? y0 + 28 : y0 + 5;
