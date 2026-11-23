@@ -1,225 +1,118 @@
-// 3D Ballistic Tracers, Muzzle Flashes, Multi-Puff Explosion Bursts, Drift Trails & Hit Detection
+// 3D Ballistic Tracers, Multi-Layered Jagged Detonations, Debris Shards, Drift Trails & Hit Detection
 export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) {
-  const THREE = window.THREE;
-  const fxGroup = new THREE.Group();
-  scene.add(fxGroup);
+ const THREE = window.THREE;
+ const Bas = (p) => new THREE.MeshBasicMaterial(p);
+ const fxGroup = new THREE.Group();
+ scene.add(fxGroup);
+ const tracers = [], explosions = [];
 
-  const tracers = [];
-  const explosions = [];
+ function spawnTracer(fromX, fromY, fromZ, toX, toY, toZ, colorHex = 0xffdf40) {
+  const len = Math.max(0.5, Math.hypot(toX - fromX, toY - fromY, toZ - fromZ));
+  const holder = new THREE.Group();
+  const outerGeo = new THREE.CylinderGeometry(0.018, 0.046, len, 6); outerGeo.rotateX(Math.PI / 2);
+  holder.add(new THREE.Mesh(outerGeo, Bas({ color: colorHex, transparent: true, opacity: 0.94, blending: THREE.AdditiveBlending })));
+  const coreGeo = new THREE.CylinderGeometry(0.008, 0.02, len * 0.92, 6); coreGeo.rotateX(Math.PI / 2);
+  holder.add(new THREE.Mesh(coreGeo, Bas({ color: 0xffffff })));
+  holder.position.set((fromX + toX) * 0.5, (fromY + toY) * 0.5, (fromZ + toZ) * 0.5);
+  holder.lookAt(toX, toY, toZ);
+  fxGroup.add(holder);
+  tracers.push({ mesh: holder, ttl: 0.35 });
+ }
 
-  function spawnTracer(fromX, fromY, fromZ, toX, toY, toZ, colorHex = 0xffdf40) {
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    const dz = toZ - fromZ;
-    const len = Math.max(0.5, Math.hypot(dx, dy, dz));
+ function spawnExplosion(x, y, z, s = 1.0) {
+  const holder = new THREE.Group();
+  holder.position.set(x, y, z);
 
-    // Sleek tapered glowing tracer streak + bright white hot core
-    const geo = new THREE.CylinderGeometry(0.015, 0.042, len, 6);
-    geo.rotateX(Math.PI / 2);
-    const mat = new THREE.MeshBasicMaterial({
-      color: colorHex,
-      transparent: true,
-      opacity: 0.92,
-      blending: THREE.AdditiveBlending,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set((fromX + toX) * 0.5, (fromY + toY) * 0.5, (fromZ + toZ) * 0.5);
-    mesh.lookAt(toX, toY, toZ);
-    fxGroup.add(mesh);
+  const coreA = new THREE.Mesh(new THREE.IcosahedronGeometry(0.68 * s, 0), Bas({ color: 0xfff8b8 }));
+  coreA.position.y = 0.32 * s; coreA.scale.set(1.15, 1.35, 1.05);
+  const coreB = new THREE.Mesh(new THREE.OctahedronGeometry(0.84 * s, 0), Bas({ color: 0xffd447 }));
+  coreB.position.y = 0.38 * s; coreB.rotation.set(0.6, 0.8, 0.4); coreB.scale.set(1.25, 0.95, 1.2);
+  holder.add(coreA, coreB);
 
-    tracers.push({ mesh, ttl: 0.35 });
+  const fCols = [0xffa619, 0xff6214, 0xe8251a, 0xff8c1a, 0xff3b14];
+  for (let i = 0; i < 14; i++) {
+   const az = (i / 14) * Math.PI * 2 + (i % 3) * 0.18, el = 0.22 + (i % 4) * 0.26;
+   const t = new THREE.Mesh(new THREE.ConeGeometry((0.34 + (i % 2) * 0.16) * s, (0.95 + (i % 3) * 0.42) * s, 5), Bas({ color: fCols[i % 5], transparent: true, opacity: 0.94 }));
+   t.position.set(Math.cos(az) * 0.42 * s, (0.28 + (i % 3) * 0.24) * s, Math.sin(az) * 0.42 * s);
+   t.rotation.set(Math.sin(az) * (1.57 - el), 0, -Math.cos(az) * (1.57 - el));
+   holder.add(t);
   }
 
-  function spawnExplosion(x, y, z, scale = 1.0) {
-    // Dramatic roaring 3D orange-gold explosion fireball + dark rising smoke plume + flying embers
-    const holder = new THREE.Group();
-    holder.position.set(x, y, z);
-
-    // Brilliant white-gold core
-    const flashCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.62 * scale, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xfffac2 })
-    );
-    flashCore.position.y = 0.25 * scale;
-    holder.add(flashCore);
-
-    // Roaring orange-gold fireball billows & dark rising smoke plume
-    const puffOffsets = [
-      { ox: 0.0, oy: 0.35, oz: 0.0, r: 0.92, c: 0xffa619, op: 0.94 },
-      { ox: 0.38, oy: 0.28, oz: 0.16, r: 0.76, c: 0xff6214, op: 0.92 },
-      { ox: -0.42, oy: 0.42, oz: -0.22, r: 0.72, c: 0xff3b14, op: 0.90 },
-      { ox: 0.18, oy: 0.78, oz: 0.22, r: 0.68, c: 0xffb82e, op: 0.88 },
-      { ox: -0.18, oy: 1.15, oz: -0.15, r: 0.85, c: 0x262934, op: 0.82 },
-      { ox: 0.26, oy: 1.65, oz: -0.10, r: 0.98, c: 0x1d2029, op: 0.76 },
-      { ox: -0.24, oy: 2.20, oz: 0.18, r: 1.12, c: 0x161820, op: 0.68 },
-    ];
-    for (let i = 0; i < puffOffsets.length; i++) {
-      const p = puffOffsets[i];
-      const puff = new THREE.Mesh(
-        new THREE.DodecahedronGeometry(p.r * scale, 1),
-        new THREE.MeshBasicMaterial({ color: p.c, transparent: true, opacity: p.op })
-      );
-      puff.position.set(p.ox * scale, p.oy * scale, p.oz * scale);
-      holder.add(puff);
-    }
-
-    // Scorched ground crater blast ring
-    const scorch = new THREE.Mesh(
-      new THREE.CircleGeometry(1.4 * scale, 16),
-      new THREE.MeshBasicMaterial({ color: 0x181a22, transparent: true, opacity: 0.65, depthWrite: false })
-    );
-    scorch.rotation.x = -Math.PI / 2;
-    scorch.position.y = -y + 0.07;
-    holder.add(scorch);
-
-    // Flying ember sparks
-    for (let s = 0; s < 10; s++) {
-      const ang = (s / 10) * Math.PI * 2;
-      const spark = new THREE.Mesh(
-        new THREE.BoxGeometry(0.08 * scale, 0.08 * scale, 0.52 * scale),
-        new THREE.MeshBasicMaterial({ color: s % 2 === 0 ? 0xffe45e : 0xff6214 })
-      );
-      spark.position.set(Math.cos(ang) * 1.15 * scale, (0.35 + (s % 3) * 0.4) * scale, Math.sin(ang) * 1.15 * scale);
-      spark.rotation.y = -ang;
-      spark.rotation.x = 0.35;
-      holder.add(spark);
-    }
-
-    fxGroup.add(holder);
-    explosions.push({ mesh: holder, ttl: 0.85 });
-  }
-
-  function spawnDriftEffects(x, z, rotY) {
-    // Glowing brake-light trails, tire smoke puffs & wheel sparks behind drifting car
-    const backX = x - Math.sin(rotY) * 2.5;
-    const backZ = z - Math.cos(rotY) * 2.5;
-    const rightX = Math.cos(rotY);
-    const rightZ = -Math.sin(rotY);
-
-    for (const side of [-0.95, 0.95]) {
-      const wx = backX + rightX * side;
-      const wz = backZ + rightZ * side;
-
-      // Glowing brake-light streak
-      const streak = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.26, 7.5),
-        new THREE.MeshBasicMaterial({
-          color: 0xff2248,
-          transparent: true,
-          opacity: 0.55,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        })
-      );
-      streak.rotation.x = -Math.PI / 2;
-      streak.rotation.z = -rotY;
-      streak.position.set(wx - Math.sin(rotY) * 3.5, 0.11, wz - Math.cos(rotY) * 3.5);
-      fxGroup.add(streak);
-
-      // Tire smoke puff
-      for (let k = 0; k < 3; k++) {
-        const smoke = new THREE.Mesh(
-          new THREE.DodecahedronGeometry(0.45 + k * 0.18, 1),
-          new THREE.MeshBasicMaterial({ color: 0xd9e4f5, transparent: true, opacity: 0.28 - k * 0.06 })
-        );
-        smoke.position.set(
-          wx - Math.sin(rotY) * (0.6 + k * 1.15),
-          0.35 + k * 0.22,
-          wz - Math.cos(rotY) * (0.6 + k * 1.15)
-        );
-        fxGroup.add(smoke);
-      }
-
-      // Orange drift sparks
-      for (let sp = 0; sp < 4; sp++) {
-        const spark = new THREE.Mesh(
-          new THREE.BoxGeometry(0.05, 0.05, 0.55),
-          new THREE.MeshBasicMaterial({ color: 0xffcf40 })
-        );
-        spark.position.set(
-          wx - Math.sin(rotY) * (0.4 + sp * 0.65) + (sp % 2 === 0 ? 0.25 : -0.2),
-          0.18 + sp * 0.14,
-          wz - Math.cos(rotY) * (0.4 + sp * 0.65)
-        );
-        spark.rotation.y = rotY + (sp - 1.5) * 0.18;
-        spark.rotation.x = 0.25;
-        fxGroup.add(spark);
-      }
-    }
-  }
-
-  events.on('combat:fire', () => {
-    const p = state.player;
-    const wep = weaponsSys.getCurrentWeapon();
-    p.muzzleTimer = 0.14;
-
-    if (typeof wep.mag === 'number' && wep.mag > 0) {
-      wep.mag -= 1;
-      if (wep.mag === 0 && wep.reserve > 0) {
-        wep.mag = 30;
-        wep.reserve = Math.max(0, wep.reserve - 30);
-      }
-    }
-
-    const dirX = Math.sin(p.rotY);
-    const dirZ = Math.cos(p.rotY);
-    const startX = p.x + dirX * 0.8;
-    const startY = p.y + 1.38;
-    const startZ = p.z + dirZ * 0.8;
-
-    let endX = startX + dirX * 36;
-    let endY = startY;
-    let endZ = startZ + dirZ * 36;
-
-    const enemies = state.entities.enemies;
-    for (let i = 0; i < enemies.length; i++) {
-      const en = enemies[i];
-      if (!en.alive) continue;
-      const dist = Math.hypot(en.x - p.x, en.z - p.z);
-      if (dist < wep.range) {
-        endX = en.x;
-        endY = 1.25;
-        endZ = en.z;
-        en.hp -= wep.damage;
-        spawnExplosion(en.x, 1.3, en.z, 0.55);
-        if (en.hp <= 0) {
-          en.alive = false;
-          en.downed = true;
-          p.cash += 1250;
-          p.respect += 180;
-          state.wanted.stars = Math.min(5, Math.max(2, state.wanted.stars));
-        }
-        break;
-      }
-    }
-
-    spawnTracer(startX, startY, startZ, endX, endY, endZ, wep.color);
-    if (soundEngine) soundEngine.playGunshot();
+  [[0.42, 0.45, 0.22, 1.3, 0.85, 1.1, 0.66, 0xff6b14, 1], [-0.46, 0.52, -0.24, 1.1, 1.3, 0.9, 0.64, 0xe8321a, 1], [0.15, 0.88, -0.35, 1.2, 1.15, 0.85, 0.62, 0xff981a, 1], [-0.25, 0.74, 0.38, 0.95, 1.25, 1.2, 0.58, 0xff4914, 1], [-0.35, 1.35, -0.22, 1.35, 0.82, 1.15, 0.74, 0x2c2529, 0.86], [0.38, 1.55, 0.18, 1.25, 0.78, 1.2, 0.68, 0x231f24, 0.82], [-0.12, 1.98, 0.25, 1.4, 0.75, 1.25, 0.82, 0x1c191f, 0.76], [0.24, 2.38, -0.18, 1.45, 0.72, 1.3, 0.88, 0x17151a, 0.68]].forEach(([ox, oy, oz, sx, sy, sz, r, c, op], i) => {
+   const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r * s, 0), Bas({ color: c, transparent: op < 1, opacity: op }));
+   m.position.set(ox * s, oy * s, oz * s); m.scale.set(sx, sy, sz); m.rotation.set(i * 0.7, i * 1.1, i * 0.5);
+   holder.add(m);
   });
 
-  return {
-    fxGroup,
-    spawnTracer,
-    spawnExplosion,
-    spawnDriftEffects,
-    update(dt) {
-      if (state.activeShot === 'combat' || state.activeShot === 'cover') return;
+  const shardMat = new THREE.MeshStandardMaterial({ color: 0x1e222b, emissive: 0x441200, roughness: 0.4, metalness: 0.8 });
+  for (let i = 0; i < 16; i++) {
+   const ang = (i / 16) * Math.PI * 2, d = (1.1 + (i % 4) * 0.38) * s, h = (0.35 + (i % 5) * 0.36) * s;
+   const em = new THREE.Mesh(new THREE.BoxGeometry(0.06 * s, 0.06 * s, (0.55 + (i % 3) * 0.25) * s), Bas({ color: i % 2 === 0 ? 0xffe866 : 0xff5510 }));
+   em.position.set(Math.cos(ang) * d, h, Math.sin(ang) * d); em.rotation.set(0.4 + (i % 3) * 0.2, -ang, 0);
+   holder.add(em);
+   if (i % 2 === 0) {
+    const sh = new THREE.Mesh(new THREE.TetrahedronGeometry(0.21 * s, 0), shardMat);
+    sh.position.set(Math.cos(ang + 0.15) * d * 1.15, h + 0.25 * s, Math.sin(ang + 0.15) * d * 1.15);
+    sh.rotation.set(i * 0.8, i * 1.2, i * 0.5); holder.add(sh);
+   }
+  }
 
-      for (let i = tracers.length - 1; i >= 0; i--) {
-        tracers[i].ttl -= dt;
-        if (tracers[i].ttl <= 0) {
-          fxGroup.remove(tracers[i].mesh);
-          tracers.splice(i, 1);
-        }
-      }
-      for (let i = explosions.length - 1; i >= 0; i--) {
-        explosions[i].ttl -= dt;
-        explosions[i].mesh.scale.multiplyScalar(1 + dt * 1.4);
-        if (explosions[i].ttl <= 0) {
-          fxGroup.remove(explosions[i].mesh);
-          explosions.splice(i, 1);
-        }
-      }
-    },
-  };
+  const sc = new THREE.Mesh(new THREE.CircleGeometry(1.75 * s, 18), Bas({ color: 0x12131a, transparent: true, opacity: 0.76, depthWrite: false }));
+  sc.rotation.x = -Math.PI / 2; sc.position.y = -y + 0.07;
+  const sr = new THREE.Mesh(new THREE.RingGeometry(1.35 * s, 1.85 * s, 20), Bas({ color: 0xff7e29, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false }));
+  sr.rotation.x = -Math.PI / 2; sr.position.y = -y + 0.09;
+  holder.add(sc, sr); fxGroup.add(holder);
+  explosions.push({ mesh: holder, ttl: 0.85 });
+ }
+
+ function spawnDriftEffects(x, z, rotY) {
+  const bx = x - Math.sin(rotY) * 2.4, bz = z - Math.cos(rotY) * 2.4;
+  for (const side of [-0.92, 0.92]) {
+   const wx = bx + Math.cos(rotY) * side, wz = bz - Math.sin(rotY) * side;
+   const st = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 7.8), Bas({ color: 0xff1e42, transparent: true, opacity: 0.64, blending: THREE.AdditiveBlending, depthWrite: false }));
+   st.rotation.set(-Math.PI / 2, 0, -rotY); st.position.set(wx - Math.sin(rotY) * 3.5, 0.12, wz - Math.cos(rotY) * 3.5);
+   fxGroup.add(st);
+   for (let k = 0; k < 4; k++) {
+    const sm = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42 + k * 0.16, 0), Bas({ color: 0xdce6f7, transparent: true, opacity: 0.34 - k * 0.06 }));
+    sm.position.set(wx - Math.sin(rotY) * (0.5 + k * 1.1), 0.32 + k * 0.18, wz - Math.cos(rotY) * (0.5 + k * 1.1));
+    sm.scale.set(1.25, 0.8, 1.15); fxGroup.add(sm);
+   }
+  }
+ }
+
+ events.on('combat:fire', () => {
+  const p = state.player, wep = weaponsSys.getCurrentWeapon();
+  p.muzzleTimer = 0.14;
+  if (typeof wep.mag === 'number' && wep.mag > 0 && --wep.mag === 0 && wep.reserve > 0) {
+   wep.mag = wep.maxMag || 30; wep.reserve = Math.max(0, wep.reserve - wep.mag);
+  }
+  const dx = Math.sin(p.rotY), dz = Math.cos(p.rotY);
+  const sx = p.x + dx * 0.8, sy = p.y + 1.38, sz = p.z + dz * 0.8;
+  let ex = sx + dx * 36, ey = sy, ez = sz + dz * 36;
+  for (const en of state.entities.enemies) {
+   if (!en.alive) continue;
+   const dist = Math.hypot(en.x - p.x, en.z - p.z);
+   if (dist < wep.range) {
+    ex = en.x; ey = 1.25; ez = en.z;
+    en.hp -= weaponsSys.computeDamage ? weaponsSys.computeDamage(dist, false) : wep.damage;
+    spawnExplosion(en.x, 1.3, en.z, 0.55);
+    if (en.hp <= 0) { en.alive = false; en.downed = true; p.cash += 1250; p.respect += 180; state.wanted.stars = Math.min(5, Math.max(2, state.wanted.stars)); }
+    break;
+   }
+  }
+  spawnTracer(sx, sy, sz, ex, ey, ez, wep.color);
+  if (soundEngine) soundEngine.playGunshot();
+ });
+
+ return {
+  fxGroup, spawnTracer, spawnExplosion, spawnDriftEffects,
+  update(dt) {
+   if (state.activeShot === 'combat' || state.activeShot === 'cover') return;
+   for (let i = tracers.length - 1; i >= 0; i--) if ((tracers[i].ttl -= dt) <= 0) { fxGroup.remove(tracers[i].mesh); tracers.splice(i, 1); }
+   for (let i = explosions.length - 1; i >= 0; i--) {
+    explosions[i].mesh.scale.multiplyScalar(1 + dt * 1.4);
+    if ((explosions[i].ttl -= dt) <= 0) { fxGroup.remove(explosions[i].mesh); explosions.splice(i, 1); }
+   }
+  },
+ };
 }

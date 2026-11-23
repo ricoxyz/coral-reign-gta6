@@ -1,7 +1,8 @@
-// Main Entrypoint & System Orchestrator for CORAL REIGN: Palma Dorada (29 Modular ES Files)
+// Main Entrypoint & System Orchestrator for CORAL REIGN: Palma Dorada
 import { createGameState } from './core/state.js';
 import { EventBus, bindInputControls } from './core/events.js';
 import { GameLoop, updateThirdPersonCamera } from './core/loop.js';
+import { initCameraDirector } from './core/cameraDirector.js';
 import { buildPalmaDoradaWorld } from './world/cityBuilder.js';
 import { initTrafficVehicles } from './entities/traffic.js';
 import { tryHijackOrExitVehicle } from './entities/vehiclePhysics.js';
@@ -23,125 +24,91 @@ import { updateTitleScreen, bindMenuButtons } from './ui/titleScreen.js';
 import { SoundEngine } from './audio/soundEngine.js';
 import { initRadioSystem } from './audio/radio.js';
 import { initSaveSystem } from './storage/saveSystem.js';
-import { applyShotHooksFromUrl } from './shotHooks.js';
 
 function bootCoralReign() {
-  const THREE = window.THREE;
-  const params = new URLSearchParams(window.location.search);
-  const seed = Number(params.get('seed') || '101');
+ const THREE = window.THREE;
+ const params = new URLSearchParams(window.location.search);
+ const state = createGameState(Number(params.get('seed') || '101'));
+ const events = new EventBus();
+ const soundEngine = new SoundEngine();
 
-  const state = createGameState(seed);
-  const events = new EventBus();
-  const soundEngine = new SoundEngine();
+ const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true, powerPreference: 'high-performance' });
+ renderer.setSize(window.innerWidth, window.innerHeight);
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-  // Initialize WebGL Renderer & Perspective Camera
-  const canvas = document.getElementById('game-canvas');
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    antialias: true,
-    powerPreference: 'high-performance',
-  });
+ const scene = new THREE.Scene();
+ scene.fog = new THREE.FogExp2(0xe89b6c, 0.00038);
+ const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 1800);
+
+ const world = buildPalmaDoradaWorld(scene, state);
+ const traffic = initTrafficVehicles(scene, state);
+ const playerEntity = initPlayerEntity(scene, state);
+ const pedsAndEnemies = initPedestriansAndEnemies(scene, state);
+ const crew = initCrewSystem(scene, state, events, soundEngine);
+ const policeAI = initPoliceDispatchAI(scene, state);
+ const helicopter = initPoliceHelicopter(scene, state);
+ const roadblocks = initPoliceRoadblocks(scene, state);
+ const weaponsSys = initWeaponsSystem(state, events, soundEngine);
+ const combat = initCombatSystem(scene, state, events, weaponsSys, soundEngine);
+ const missions = initMissionSystem(scene, state, soundEngine);
+ const activities = initSideActivities(scene, state, soundEngine);
+ const radioSys = initRadioSystem(state, events, soundEngine);
+ const saveSystem = initSaveSystem(state, events, soundEngine);
+
+ bindInputControls(state, events);
+ bindMenuButtons(state, saveSystem, events, soundEngine);
+ events.on('action:hijack', () => { tryHijackOrExitVehicle(state, traffic.vehicles, soundEngine); events.emit('ui:refresh'); });
+
+ const refreshOverlays = () => {
+  updateHUD(state, weaponsSys, camera);
+  renderFullPauseMap(state, saveSystem);
+  updateTitleScreen(state, saveSystem, events);
+ };
+ events.on('ui:refresh', refreshOverlays);
+
+ const director = initCameraDirector(state, { world, traffic, playerEntity, pedsAndEnemies, policeAI, helicopter, combat, missions });
+
+ window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  refreshOverlays();
+ });
 
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xffd6a8, 0.00075);
+ window.__CORAL_REIGN__ = {
+  state, events, saveSystem, director,
+  tryHijack: () => tryHijackOrExitVehicle(state, traffic.vehicles, soundEngine),
+  fireWeapon: () => events.emit('combat:fire'),
+  toggleMap: () => events.emit('ui:toggleMap'),
+ };
 
-  const camera = new THREE.PerspectiveCamera(
-    62,
-    window.innerWidth / window.innerHeight,
-    0.5,
-    1800
-  );
+ const updateAll = (dt) => {
+  world.update(state.time);
+  traffic.update(dt, world.colliders);
+  playerEntity.update(dt, world.colliders);
+  pedsAndEnemies.update(dt);
+  crew.update(dt);
+  policeAI.update(dt, state.time);
+  helicopter.update(dt, state.time);
+  roadblocks.update(state.time);
+  combat.update(dt);
+  missions.update(dt, state.time);
+  activities.update(dt, state.time);
+  radioSys.updateSequencer(dt);
+  updateWantedLevel(state, dt);
+  updateProgression(state);
+  director.updateFraming(camera, dt);
+ };
 
-  // Build 3D World, Entities, Police, Gameplay, Audio & Save Systems
-  const world = buildPalmaDoradaWorld(scene, state);
-  const traffic = initTrafficVehicles(scene, state);
-  const playerEntity = initPlayerEntity(scene, state);
-  const pedsAndEnemies = initPedestriansAndEnemies(scene, state);
-  const crew = initCrewSystem(scene, state, events, soundEngine);
-  const policeAI = initPoliceDispatchAI(scene, state);
-  const helicopter = initPoliceHelicopter(scene, state);
-  const roadblocks = initPoliceRoadblocks(scene, state);
-  const weaponsSys = initWeaponsSystem(state, events, soundEngine);
-  const combat = initCombatSystem(scene, state, events, weaponsSys, soundEngine);
-  const missions = initMissionSystem(scene, state, soundEngine);
-  const activities = initSideActivities(scene, state, soundEngine);
-  initRadioSystem(state, events, soundEngine);
-  const saveSystem = initSaveSystem(state, events, soundEngine);
+ const renderAll = () => {
+  updateThirdPersonCamera(camera, state, traffic.vehicles);
+  renderer.render(scene, camera);
+  refreshOverlays();
+ };
 
-  bindInputControls(state, events);
-  bindMenuButtons(state, saveSystem, events, soundEngine);
-
-  events.on('action:hijack', () => {
-    tryHijackOrExitVehicle(state, traffic.vehicles, soundEngine);
-    events.emit('ui:refresh');
-  });
-
-  const refreshOverlays = () => {
-    updateHUD(state, weaponsSys, camera);
-    renderFullPauseMap(state, saveSystem);
-    updateTitleScreen(state, saveSystem, events);
-  };
-  events.on('ui:refresh', refreshOverlays);
-
-  // Apply deterministic URL screenshot presets if ?shot= is present
-  applyShotHooksFromUrl(state, {
-    world,
-    traffic,
-    playerEntity,
-    pedsAndEnemies,
-    policeAI,
-    helicopter,
-    combat,
-    missions,
-  });
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    refreshOverlays();
-  });
-
-  // Expose deterministic inspection handle for automated Playwright verification
-  window.__CORAL_REIGN__ = {
-    state,
-    events,
-    saveSystem,
-    tryHijack: () => tryHijackOrExitVehicle(state, traffic.vehicles, soundEngine),
-    fireWeapon: () => events.emit('combat:fire'),
-    toggleMap: () => events.emit('ui:toggleMap'),
-  };
-
-  // Run one initial simulation & UI frame immediately
-  const updateAll = (dt) => {
-    world.update(state.time);
-    traffic.update(dt, world.colliders);
-    playerEntity.update(dt, world.colliders);
-    pedsAndEnemies.update(dt);
-    crew.update(dt);
-    policeAI.update(dt, state.time);
-    helicopter.update(dt, state.time);
-    roadblocks.update(state.time);
-    combat.update(dt);
-    missions.update(dt, state.time);
-    activities.update(dt, state.time);
-    updateWantedLevel(state, dt);
-    updateProgression(state);
-  };
-
-  const renderAll = () => {
-    updateThirdPersonCamera(camera, state, traffic.vehicles);
-    renderer.render(scene, camera);
-    refreshOverlays();
-  };
-
-  updateAll(0.016);
-  renderAll();
-
-  const loop = new GameLoop(state, updateAll, renderAll);
-  loop.start();
+ updateAll(0.016);
+ renderAll();
+ new GameLoop(state, updateAll, renderAll).start();
 }
 
 bootCoralReign();

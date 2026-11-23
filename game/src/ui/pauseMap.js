@@ -1,325 +1,123 @@
-// Full-Screen 3-Column Pause Dashboard: Progression Ring, 6-District Map, Career Stats & 3 Save Slots
+// Full-Screen 3-Column Pause Dashboard: Progression Ring, 6-District Urban Cartography, GPS Route & 3 Save Slots
 import { DISTRICTS } from '../world/districts.js';
 import { ROAD_X, ROAD_Z } from '../world/roads.js';
+import { SAFEHOUSE_AND_SHOP_NODES } from '../world/cityBuilder.js';
 import { STORY_MISSIONS } from '../gameplay/missions.js';
 import { STREET_RACES } from '../gameplay/activities.js';
 
+const B = (c, x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+const C = (c, x, y, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); };
+const L = (c, x1, y1, x2, y2, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
+const $ = (id) => document.getElementById(id);
+
+function drawBlock(ctx, id, bx, by, bw, bh, ix, iz) {
+ B(ctx, bx, by, bw, bh, '#1d2d44');
+ ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
+ const cx = bx + bw * 0.5, cy = by + bh * 0.5, m = Math.min(bw, bh);
+ if (id === 'solana_strip') {
+  const pal = ['#ff5e8e', '#ffb86c', '#ffd97d'];
+  B(ctx, bx + 5, by + 5, bw * 0.44, bh - 7, 'rgba(8,14,26,.65)');
+  B(ctx, bx + 3, by + 3, bw * 0.42, bh - 8, pal[(ix + iz) % 3]);
+  B(ctx, bx + 3, by + 3, bw * 0.76, bh * 0.32, pal[(ix + iz + 1) % 3]);
+  C(ctx, bx + bw * 0.68, by + bh * 0.66, m * 0.22 + 2, '#fff5db');
+  C(ctx, bx + bw * 0.68, by + bh * 0.66, m * 0.22, '#00f0ff');
+ } else if (id === 'coral_marina') {
+  B(ctx, bx + 3, by + 3, bw - 6, bh * 0.42, '#0b4f6c');
+  for (let k = 0; k < 3; k++) B(ctx, bx + 7 + k * bw * 0.28, by + 7, bw * 0.18, bh * 0.22, '#fff');
+  B(ctx, bx + 4, by + bh * 0.54, bw * 0.54, bh * 0.38, '#2ec4b6');
+  B(ctx, bx + bw * 0.62, by + bh * 0.54, bw * 0.3, bh * 0.38, '#ff9f1c');
+ } else if (id === 'vidrio_downtown') {
+  L(ctx, bx + 2, by + bh - 2, bx + bw - 2, by + 2, '#4a6182', 4);
+  C(ctx, cx, cy, m * 0.3, (ix + iz) % 2 ? '#f9c74f' : '#4ea8de'); C(ctx, cx, cy, m * 0.16, '#caf0f8');
+  B(ctx, bx + 3, by + 3, bw * 0.32, bh * 0.32, '#56cfe1'); B(ctx, bx + bw * 0.65, by + bh * 0.65, bw * 0.32, bh * 0.32, '#56cfe1');
+ } else if (id === 'mercado_viejo') {
+  L(ctx, bx, cy, bx + bw, cy, '#384b66', 3); L(ctx, cx, by, cx, by + bh, '#384b66', 3);
+  ctx.fillStyle = '#f3722c'; ctx.beginPath();
+  for (let a = 0; a < 8; a++) ctx.lineTo(cx + Math.cos(a * 0.785 + 0.39) * m * 0.36, cy + Math.sin(a * 0.785 + 0.39) * m * 0.36);
+  ctx.closePath(); ctx.fill(); C(ctx, cx, cy, m * 0.17, '#f9c74f');
+ } else if (id === 'palma_pier') {
+  B(ctx, bx + 2, by + 2, bw - 4, bh - 4, '#2a4747'); C(ctx, bx + bw * 0.45, cy, m * 0.34, '#43aa8b');
+  B(ctx, bx + bw * 0.55, by + 5, bw * 0.36, bh * 0.34, '#ff4d79'); B(ctx, bx + bw * 0.55, by + bh * 0.56, bw * 0.36, bh * 0.34, '#f9c74f');
+ } else {
+  B(ctx, bx + 1, by + 1, bw - 2, bh - 2, '#232942');
+  ctx.strokeStyle = '#5c6784'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(bx + 3, by + bh - 4);
+  ctx.bezierCurveTo(bx + bw * 0.85, by + bh * 0.75, bx + bw * 0.15, by + bh * 0.25, bx + bw - 3, by + 4); ctx.stroke();
+  B(ctx, bx + 5, by + 5, bw * 0.36, bh * 0.28, '#c77dff'); B(ctx, bx + 9, by + 9 + bh * 0.28, bw * 0.22, bh * 0.16, '#00f0ff');
+  C(ctx, bx + bw * 0.72, by + bh * 0.68, m * 0.22, '#ffb5a7');
+ }
+}
+
 export function renderFullPauseMap(state, saveSystem) {
-  const modal = document.getElementById('pause-map-modal');
-  if (!modal) return;
+ const modal = $('pause-map-modal');
+ if (!modal) return;
+ if (state.mode !== 'pause_map') { modal.classList.remove('visible'); return; }
+ modal.classList.add('visible');
 
-  if (state.mode === 'pause_map') {
-    modal.classList.add('visible');
-  } else {
-    modal.classList.remove('visible');
-    return;
+ const st = state.stats, pct = st.completionPct, off = (251.3 * (1 - pct / 100)).toFixed(1);
+ if ($('pause-ring-wrap')) $('pause-ring-wrap').innerHTML = `<svg class="ring-svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="10"/><circle id="completion-ring-arc" cx="50" cy="50" r="40" fill="none" stroke="#00f0ff" stroke-width="10" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="${off}" transform="rotate(-90 50 50)"/></svg><div><div class="ring-text-big" id="pause-completion-pct">${pct.toFixed(1)}%</div><div class="ring-text-sub">COMPLETE</div></div>`;
+ if ($('pause-breakdown-bars')) $('pause-breakdown-bars').innerHTML = [['Story Missions', `${st.missionsDone} / ${st.missionsTotal}`, 70], ['Street Races', `${st.racesWon} / ${st.racesTotal}`, 60], ['Stunt Jumps', `${st.stuntsCompleted} / ${st.stuntsTotal}`, 60], ['Golden Shells', `${st.shellsCollected} / ${st.shellsTotal}`, 67], ['Crew Roster', '3 / 3', 100]].map(([l, v, w]) => `<div class="prog-row"><div class="prog-lbl"><span>${l}</span><span>${v}</span></div><div class="prog-track"><div class="prog-fill" style="width:${w}%;"></div></div></div>`).join('');
+ if ($('pause-mission-grid') && !$('pause-mission-grid').children.length) $('pause-mission-grid').innerHTML = STORY_MISSIONS.map((m) => `<div class="mission-item"><span>${m.num}. ${m.title}</span><span class="medal ${m.medal}">${m.medal}</span></div>`).join('');
+ if ($('pause-career-grid')) $('pause-career-grid').innerHTML = [[`$${state.player.cash.toLocaleString()}`, 'SYNDICATE CASH'], [st.carsHijacked, 'CARS HIJACKED'], [st.evasions, 'POLICE EVASIONS'], [`${st.shellsCollected} / ${st.shellsTotal}`, 'GOLDEN SHELLS']].map(([v, l]) => `<div class="stat-box"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`).join('');
+ if ($('pause-map-legend') && !$('pause-map-legend').children.length) $('pause-map-legend').innerHTML = [['#4eff91', '● PLAYER & GPS'], ['#ffbf3c', 'H HEISTS'], ['#00f0ff', 'S SAFEHOUSES'], ['#ff7e29', 'P MOD SHOPS'], ['#b978ff', 'R RACES'], ['#ff4d79', '★ POLICE HQ']].map(([c, t]) => `<span style="color:${c};">${t}</span>`).join('');
+ saveSystem.renderSaveSlotsInto('pause-save-slots', 'pause');
+
+ const canvas = $('full-map-canvas');
+ if (!canvas) return;
+ const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+ B(ctx, 0, 0, w, h, '#0e1b2e');
+ const tx = (wx) => ((wx + 480) / 900) * w, ty = (wz) => ((wz + 540) / 1100) * h;
+ const beach = tx(232), surf = tx(268), og = ctx.createLinearGradient(surf, 0, w, 0);
+ og.addColorStop(0, '#1ee3cf'); og.addColorStop(0.35, '#00b4d8'); og.addColorStop(1, '#005f99');
+ B(ctx, surf, 0, w - surf, h, og); B(ctx, beach, 0, surf - beach, h, '#f7d794'); B(ctx, surf - 2, 0, 3.5, h, '#fff');
+
+ for (let pf = 0; pf < 5; pf++) {
+  const py = ty(-505 + pf * 28);
+  B(ctx, beach - 6, py, 52, 6, '#c8d6e5'); B(ctx, beach + 14, py - 5, 14, 4, '#fff'); B(ctx, beach + 32, py + 7, 14, 4, '#fff');
+ }
+ const pierY = ty(365);
+ B(ctx, beach - 4, pierY - 12, 64, 24, '#c98a5b'); C(ctx, beach + 44, pierY, 9, '#ff4d79'); C(ctx, beach + 44, pierY, 5, '#00f0ff');
+ for (const d of DISTRICTS) B(ctx, tx(d.bounds.minX), ty(d.bounds.minZ), tx(d.bounds.maxX) - tx(d.bounds.minX), ty(d.bounds.maxZ) - ty(d.bounds.minZ), `${d.color}20`);
+
+ const gx = [-440, ...ROAD_X], gz = [-530, ...ROAD_Z, 550];
+ for (let ix = 0; ix < gx.length - 1; ix++) {
+  for (let iz = 0; iz < gz.length - 1; iz++) {
+   const cx = (gx[ix] + gx[ix + 1]) * 0.5, cz = (gz[iz] + gz[iz + 1]) * 0.5;
+   const dist = DISTRICTS.find((d) => cx >= d.bounds.minX && cx <= d.bounds.maxX && cz >= d.bounds.minZ && cz <= d.bounds.maxZ);
+   const bx = tx(gx[ix]) + 5, by = ty(gz[iz]) + 5, bw = tx(gx[ix + 1]) - tx(gx[ix]) - 10, bh = ty(gz[iz + 1]) - ty(gz[iz]) - 10;
+   if (bw > 6 && bh > 6) drawBlock(ctx, dist ? dist.id : 'vidrio_downtown', bx, by, bw, bh, ix, iz);
   }
+ }
 
-  // Left Column: Completion Ring & Breakdown
-  const pct = state.stats.completionPct;
-  const pctEl = document.getElementById('pause-completion-pct');
-  if (pctEl) pctEl.textContent = `${pct.toFixed(1)}%`;
+ for (const rx of ROAD_X) L(ctx, tx(rx), 0, tx(rx), h, '#34435a', 6.2);
+ for (const rz of ROAD_Z) L(ctx, 0, ty(rz), surf, ty(rz), '#34435a', 6.2);
 
-  const arcEl = document.getElementById('completion-ring-arc');
-  if (arcEl) {
-    const circ = 251.3;
-    arcEl.setAttribute('stroke-dashoffset', String((circ * (1 - pct / 100)).toFixed(1)));
-  }
+ for (const d of DISTRICTS) {
+  const x0 = tx(d.bounds.minX), y0 = ty(d.bounds.minZ), lblY = d.id === 'solana_strip' ? y0 + 28 : y0 + 5;
+  ctx.strokeStyle = d.color; ctx.lineWidth = 2.2; ctx.strokeRect(x0, y0, tx(d.bounds.maxX) - x0, ty(d.bounds.maxZ) - y0);
+  ctx.font = '900 10.5px "Segoe UI", sans-serif';
+  const tw = ctx.measureText(d.name).width;
+  B(ctx, x0 + 5, lblY, tw + 12, 17, 'rgba(8,15,28,.92)'); ctx.strokeRect(x0 + 5, lblY, tw + 12, 17);
+  ctx.fillStyle = '#fff'; ctx.fillText(d.name, x0 + 11, lblY + 12);
+ }
 
-  const progMissions = document.getElementById('prog-missions');
-  const progRaces = document.getElementById('prog-races');
-  const progStunts = document.getElementById('prog-stunts');
-  const progShells = document.getElementById('prog-shells');
-  if (progMissions) progMissions.textContent = `${state.stats.missionsDone} / ${state.stats.missionsTotal}`;
-  if (progRaces) progRaces.textContent = `${state.stats.racesWon} / ${state.stats.racesTotal}`;
-  if (progStunts) progStunts.textContent = `${state.stats.stuntsCompleted} / ${state.stats.stuntsTotal}`;
-  if (progShells) progShells.textContent = `${state.stats.shellsCollected} / ${state.stats.shellsTotal}`;
+ const px = tx(state.player.x), py = ty(state.player.z), wp = state.mission.waypoint;
+ if (wp) {
+  const wx = tx(wp.x), wy = ty(wp.z), midY = (py + wy) * 0.5;
+  ctx.strokeStyle = 'rgba(255,77,121,.55)'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, midY); ctx.lineTo(wx, wy); ctx.stroke();
+  ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3.2; ctx.setLineDash([7, 4]); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, midY); ctx.lineTo(wx, wy); ctx.stroke(); ctx.setLineDash([]);
+  B(ctx, px + 12, midY - 8, 118, 18, 'rgba(8,15,28,.94)'); ctx.strokeRect(px + 12, midY - 8, 118, 18);
+  ctx.fillStyle = '#00f0ff'; ctx.font = '900 9.5px "Segoe UI", sans-serif'; ctx.fillText('GPS ROUTE · 0.84 KM', px + 19, midY + 4.5);
+ }
 
-  // Mission Ratings (G / S / B / ACTIVE / OPEN)
-  const mGrid = document.getElementById('pause-mission-grid');
-  if (mGrid) {
-    const mHtml = STORY_MISSIONS.map(
-      (m) => `
-      <div class="mission-item">
-        <span>${m.num}. ${m.title}</span>
-        <span class="medal ${m.medal}">${m.medal}</span>
-      </div>`
-    ).join('');
-    if (mGrid._lastHtml !== mHtml) {
-      mGrid._lastHtml = mHtml;
-      mGrid.innerHTML = mHtml;
-    }
-  }
-
-  // Right Column: Career Stats & 3 Save Slots
-  const nwEl = document.getElementById('stat-networth');
-  const shEl = document.getElementById('stat-shells');
-  if (nwEl) nwEl.textContent = `$${state.player.cash.toLocaleString()}`;
-  if (shEl) shEl.textContent = `${state.stats.shellsCollected} / ${state.stats.shellsTotal}`;
-  saveSystem.renderSaveSlotsInto('pause-save-slots', 'pause');
-
-  // Center Column: 6-District Palma Dorada City Cartography Canvas with Vivid 3D-Style City Blocks, Beach & Turquoise Bay
-  const canvas = document.getElementById('full-map-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width;
-  const h = canvas.height;
-
-  ctx.fillStyle = '#132238';
-  ctx.fillRect(0, 0, w, h);
-
-  const tx = (wx) => ((wx + 480) / 900) * w;
-  const ty = (wz) => ((wz + 540) / 1100) * h;
-
-  // Sparkling Turquoise Ocean Bay, Shallow Lagoon, & Vivid Golden Beach on East coast
-  const beachStart = tx(232);
-  const surfLine = tx(268);
-  const lagoonEnd = tx(315);
-
-  const oceanGrad = ctx.createLinearGradient(surfLine, 0, w, 0);
-  oceanGrad.addColorStop(0, '#1ee3cf');
-  oceanGrad.addColorStop(0.32, '#00b4d8');
-  oceanGrad.addColorStop(1, '#0077b6');
-  ctx.fillStyle = oceanGrad;
-  ctx.fillRect(surfLine, 0, w - surfLine, h);
-
-  // Subtle wave contour ripples in the turquoise bay
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-  ctx.lineWidth = 1.5;
-  for (let wy = 24; wy < h; wy += 36) {
-    ctx.beginPath();
-    ctx.moveTo(surfLine + 12, wy);
-    ctx.quadraticCurveTo(lagoonEnd, wy - 7, w - 16, wy);
-    ctx.stroke();
-  }
-
-  // Golden sand beach strip + white surf foam edge
-  ctx.fillStyle = '#f7d794';
-  ctx.fillRect(beachStart, 0, surfLine - beachStart, h);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(surfLine - 2, 0, 3.5, h);
-
-  // Palma Pier Wooden Boardwalk extending into the turquoise bay
-  ctx.fillStyle = '#c98a5b';
-  ctx.fillRect(surfLine - 4, ty(300), 42, 18);
-  ctx.strokeStyle = '#ff4d79';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(surfLine - 4, ty(300), 42, 18);
-
-  // 6 Colored District Zones
-  for (let i = 0; i < DISTRICTS.length; i++) {
-    const d = DISTRICTS[i];
-    const b = d.bounds;
-    const x0 = tx(b.minX);
-    const y0 = ty(b.minZ);
-    const dw = tx(b.maxX) - x0;
-    const dh = ty(b.maxZ) - y0;
-
-    ctx.fillStyle = `${d.color}22`;
-    ctx.fillRect(x0, y0, dw, dh);
-  }
-
-  // Render Vivid 3D-Style Architectural City Blocks inside every road grid cell (NO empty dark grid squares!)
-  const fullGridX = [-440, ...ROAD_X];
-  const fullGridZ = [-530, ...ROAD_Z, 550];
-  const blockPalettes = [
-    ['#ff6b8b', '#ffb86c', '#ffd97d', '#fff3d1'], // Solana Strip Pastel Coral & Gold
-    ['#2ec4b6', '#72efdd', '#cbf3f0', '#ff9f1c'], // Coral Marina Seafoam & Aqua
-    ['#4ea8de', '#56cfe1', '#f9c74f', '#90e0ef'], // Vidrio Downtown Glass & Gold
-    ['#f3722c', '#f8961e', '#f9c74f', '#ff6b6b'], // Mercado Viejo Terracotta
-    ['#43aa8b', '#90be6d', '#f9c74f', '#ff5a79'], // Palma Pier Tropical Mint
-    ['#9d4edd', '#c77dff', '#ffb5a7', '#fcd5ce'], // Mirador Heights Villa Pastel
-  ];
-
-  for (let ix = 0; ix < fullGridX.length - 1; ix++) {
-    for (let iz = 0; iz < fullGridZ.length - 1; iz++) {
-      const wx0 = fullGridX[ix];
-      const wx1 = fullGridX[ix + 1];
-      const wz0 = fullGridZ[iz];
-      const wz1 = fullGridZ[iz + 1];
-      const cx = (wx0 + wx1) * 0.5;
-      const cz = (wz0 + wz1) * 0.5;
-
-      // Determine district palette for this block
-      let palIdx = 2;
-      for (let d = 0; d < DISTRICTS.length; d++) {
-        const b = DISTRICTS[d].bounds;
-        if (cx >= b.minX && cx <= b.maxX && cz >= b.minZ && cz <= b.maxZ) {
-          palIdx = d;
-          break;
-        }
-      }
-      const pal = blockPalettes[palIdx];
-
-      const bx = tx(wx0) + 5;
-      const by = ty(wz0) + 5;
-      const bw = tx(wx1) - tx(wx0) - 10;
-      const bh = ty(wz1) - ty(wz0) - 10;
-      if (bw <= 6 || bh <= 6) continue;
-
-      // Sunlit travertine block plaza pad
-      ctx.fillStyle = '#25364f';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(bx, by, bw, bh);
-
-      // 4 Sculpted 3D-style building footprints with drop shadow & roof highlight
-      const subW = (bw - 10) * 0.5;
-      const subH = (bh - 10) * 0.5;
-      const footprints = [
-        { ox: 3, oy: 3, c: pal[(ix + iz) % pal.length] },
-        { ox: 7 + subW, oy: 3, c: pal[(ix + iz + 1) % pal.length] },
-        { ox: 3, oy: 7 + subH, c: pal[(ix + iz + 2) % pal.length] },
-        { ox: 7 + subW, oy: 7 + subH, c: pal[(ix + iz + 3) % pal.length] },
-      ];
-
-      for (let f = 0; f < footprints.length; f++) {
-        const fp = footprints[f];
-        // Building 3D extruded shadow
-        ctx.fillStyle = 'rgba(8, 14, 26, 0.65)';
-        ctx.fillRect(bx + fp.ox + 2.5, by + fp.oy + 2.5, subW, subH);
-        // Building main pastel roof
-        ctx.fillStyle = fp.c;
-        ctx.fillRect(bx + fp.ox, by + fp.oy, subW, subH);
-        // Stepped inner penthouse tier
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillRect(bx + fp.ox + 3, by + fp.oy + 3, Math.max(4, subW - 6), Math.max(4, subH - 6));
-      }
-
-      // Add sparkling turquoise resort pool on oceanfront blocks
-      if (cx > 120) {
-        ctx.fillStyle = '#00f0ff';
-        ctx.fillRect(bx + bw * 0.52, by + bh * 0.25, bw * 0.34, bh * 0.5);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(bx + bw * 0.52, by + bh * 0.25, bw * 0.34, bh * 0.5);
-      }
-    }
-  }
-
-  // Arterial Road Grid with golden center lines
-  for (let i = 0; i < ROAD_X.length; i++) {
-    const rx = tx(ROAD_X[i]);
-    ctx.strokeStyle = '#38465e';
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.moveTo(rx, 0);
-    ctx.lineTo(rx, h);
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(255, 204, 64, 0.6)';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(rx, 0);
-    ctx.lineTo(rx, h);
-    ctx.stroke();
-  }
-  for (let j = 0; j < ROAD_Z.length; j++) {
-    const rz = ty(ROAD_Z[j]);
-    ctx.strokeStyle = '#38465e';
-    ctx.lineWidth = 6.5;
-    ctx.beginPath();
-    ctx.moveTo(0, rz);
-    ctx.lineTo(surfLine, rz);
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(255, 204, 64, 0.55)';
-    ctx.lineWidth = 1.1;
-    ctx.beginPath();
-    ctx.moveTo(0, rz);
-    ctx.lineTo(surfLine, rz);
-    ctx.stroke();
-  }
-
-  // District Borders & High-Contrast Pill Labels
-  for (let i = 0; i < DISTRICTS.length; i++) {
-    const d = DISTRICTS[i];
-    const b = d.bounds;
-    const x0 = tx(b.minX);
-    const y0 = ty(b.minZ);
-    const dw = tx(b.maxX) - x0;
-    const dh = ty(b.maxZ) - y0;
-
-    ctx.strokeStyle = d.color;
-    ctx.lineWidth = 2.2;
-    ctx.strokeRect(x0, y0, dw, dh);
-
-    const lblY = d.id === 'solana_strip' ? y0 + 28 : y0 + 5;
-    ctx.font = '900 10.5px "Segoe UI", sans-serif';
-    const textW = ctx.measureText(d.name).width;
-    ctx.fillStyle = 'rgba(8, 15, 28, 0.92)';
-    ctx.fillRect(x0 + 5, lblY, textW + 12, 17);
-    ctx.strokeStyle = d.color;
-    ctx.lineWidth = 1.2;
-    ctx.strokeRect(x0 + 5, lblY, textW + 12, 17);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(d.name, x0 + 11, lblY + 12);
-  }
-
-  // Beach & Bay Labels on East Coast
-  ctx.save();
-  ctx.font = '900 10px "Segoe UI", sans-serif';
-  ctx.fillStyle = '#003554';
-  ctx.fillText('SOLANA BEACH', beachStart + 4, 24);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('TURQUOISE BAY', surfLine + 12, 44);
-  ctx.restore();
-
-  // GPS Route Line
-  const px = tx(state.player.x);
-  const py = ty(state.player.z);
-  const wp = state.mission.waypoint;
-  if (wp) {
-    const wx = tx(wp.x);
-    const wy = ty(wp.z);
-    ctx.strokeStyle = '#4eff91';
-    ctx.lineWidth = 3.5;
-    ctx.setLineDash([7, 4]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(wx, wy);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // 24 Golden Shells
-  const shells = state.entities.collectibles || [];
-  for (let i = 0; i < shells.length; i++) {
-    const s = shells[i];
-    ctx.fillStyle = s.collected ? 'rgba(255, 209, 102, 0.35)' : '#ffd166';
-    ctx.beginPath();
-    ctx.arc(tx(s.x), ty(s.z), 3.2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 5 Street Races
-  for (let i = 0; i < STREET_RACES.length; i++) {
-    const r = STREET_RACES[i];
-    ctx.fillStyle = '#00f0ff';
-    ctx.fillRect(tx(r.x) - 4, ty(r.z) - 4, 8, 8);
-  }
-
-  // 10 Story Heists
-  for (let i = 0; i < STORY_MISSIONS.length; i++) {
-    const m = STORY_MISSIONS[i];
-    const mx = tx(m.waypoint.x);
-    const my = ty(m.waypoint.z);
-    ctx.fillStyle = m.medal === 'ACTIVE' ? '#ff4d79' : '#ffbf3c';
-    ctx.beginPath();
-    ctx.arc(mx, my, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#050c18';
-    ctx.font = '900 9px "Segoe UI", sans-serif';
-    ctx.fillText(m.num, mx - 5.5, my + 3);
-  }
-
-  // Player Marker
-  ctx.fillStyle = '#4eff91';
-  ctx.beginPath();
-  ctx.arc(px, py, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+ ctx.textAlign = 'center'; ctx.font = '900 9.5px "Segoe UI", sans-serif';
+ for (const n of SAFEHOUSE_AND_SHOP_NODES) {
+  B(ctx, tx(n.x) - 7, ty(n.z) - 7, 14, 14, n.code === 'S' ? '#00f0ff' : n.code === 'P' ? '#ff7e29' : '#ff4d79');
+  ctx.fillStyle = '#050c18'; ctx.fillText(n.code, tx(n.x), ty(n.z) + 3.5);
+ }
+ for (const r of STREET_RACES) { C(ctx, tx(r.x), ty(r.z), 7.5, '#b978ff'); ctx.fillStyle = '#fff'; ctx.fillText('R', tx(r.x), ty(r.z) + 3); }
+ for (const m of STORY_MISSIONS) {
+  C(ctx, tx(m.waypoint.x), ty(m.waypoint.z), 8.5, m.medal === 'ACTIVE' ? '#ff4d79' : '#ffbf3c');
+  ctx.fillStyle = '#050c18'; ctx.fillText(m.medal === 'ACTIVE' ? 'H' : m.num, tx(m.waypoint.x), ty(m.waypoint.z) + 3);
+ }
+ ctx.textAlign = 'left'; C(ctx, px, py, 7.5, '#4eff91');
 }

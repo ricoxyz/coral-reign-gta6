@@ -29,8 +29,9 @@ MAKEFUN_OUTPUT_DIR=./out node main.ts
 - **6 Selectable Weapons (`1`–`6`)**: Brass Knuckles, Coral 9mm Tactical, Solana Vector SMG, Carbine AR-9, Marina Breacher 12G, and Dorada Pulse Launcher.
 - **Dynamic Police Wanted System**: Escalating patrol dispatch, roadblocks, and *AIR-1* helicopter pursuit.
 - **10 Multi-Stage Story Missions & Crew Abilities**: Story progression across Palma Dorada plus tactical crew abilities (`Z` swap plates, `X` field repair, `C` police jammer).
-- **3 In-Vehicle Radio Stations (`R`)**: *Solana Synth FM (98.4)*, *Coral Marina Bass (104.7)*, and *Vidrio Nightwave (107.9)* backed by procedural Web Audio synthesis.
-- **Persistent Career Save Slots**: 3 `localStorage` save slots accessible from the title screen and pause map.
+- **4 In-Vehicle Radio Stations (`R`)**: *Solana FM 88.4*, *Costa Brava 94.2*, *Bahia Bass 101.7*, and *Palma Nocturna 106.3* backed by a multi-channel procedural Web Audio synth sequencer.
+- **Cinematic Camera Director (`V`)**: Dynamic pursuit, street drift, over-the-shoulder tactical combat, and skyline orbit camera modes via `game/src/core/cameraDirector.js`.
+- **Persistent Career Save Slots**: 3 `localStorage` save slots accessible from the title screen and 6-district cartographic pause dashboard.
 
 ## Controls
 

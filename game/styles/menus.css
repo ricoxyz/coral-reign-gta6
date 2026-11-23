@@ -1,0 +1,57 @@
+/* CORAL REIGN — Pause & Title Menus */
+#pause-map-modal,#title-screen-modal{position:fixed;inset:0;display:none;pointer-events:auto;flex-direction:column}
+#pause-map-modal{z-index:40;background:rgba(6,10,19,.86);backdrop-filter:blur(8px);padding:18px 22px;gap:12px}
+#pause-map-modal.visible,#title-screen-modal.visible{display:flex}
+.pause-header,.dash-card h3,.prog-lbl,.mission-item,.map-legend,.save-slot-row,.title-main,.title-btn,.title-footer-legend{display:flex;justify-content:space-between;align-items:center}
+.pause-header{border-bottom:1.5px solid var(--border);padding-bottom:8px}
+.pause-brand{display:flex;align-items:center;gap:12px;color:var(--cyan);font-size:12px;font-weight:800}
+.pause-brand h1{margin:0;font-size:22px;font-weight:900;letter-spacing:1.5px;color:var(--gold)}
+.pause-tabs,.save-slot-btns{display:flex;gap:6px}
+.pause-tab{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22);color:#fff;font-weight:800;font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer}
+.pause-tab.active,.title-btn{background:linear-gradient(135deg,#ff4d79,#ff7e29);border:1.5px solid var(--gold);color:#fff}
+.pause-body{flex:1;display:grid;grid-template-columns:282px 1fr 336px;gap:14px;min-height:0}
+.dash-col,.map-panel,.save-slots-grid,.mission-list-grid,.title-left,.title-right,.title-actions{display:flex;flex-direction:column;gap:8px;min-height:0}
+.dash-card,.map-panel,.title-panel{background:rgba(10,18,34,.92);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.dash-card:last-child{flex:1;overflow:hidden}
+.dash-card h3,.title-panel h3{margin:0 0 8px;font-size:11.5px;font-weight:900;color:var(--gold)}
+.ring-wrap{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.ring-svg{width:88px;height:88px;flex-shrink:0}
+.ring-text-big{font-size:20px;font-weight:900;color:#fff}
+.ring-text-sub,.save-slot-sub,.title-sub{font-size:10px;font-weight:800;color:var(--cyan)}
+.prog-row{margin-bottom:5px}
+.prog-lbl{font-size:10.5px;font-weight:800;color:#dbe7ff;margin-bottom:2px}
+.prog-track{height:6px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green))}
+.mission-list-grid{gap:4px;font-size:10.5px;font-weight:700}
+.mission-item{background:rgba(255,255,255,.04);padding:3.5px 7px;border-radius:4px;border-left:3px solid var(--cyan);white-space:nowrap}
+.medal{font-weight:900;font-size:9.5px;padding:1px 5px;border-radius:3px;color:#000}
+.medal.G,.btn-small.save{background:var(--gold)}
+.medal.S{background:#c5d5eb}
+.medal.B{background:#e08a4e}
+.medal.ACTIVE{background:var(--coral);color:#fff}
+.medal.OPEN{background:rgba(0,240,255,.18);color:var(--cyan)}
+#full-map-canvas{width:100%;flex:1;min-height:0;border-radius:7px;border:1px solid rgba(255,255,255,.2);background:#071224}
+.map-legend{font-size:10px;font-weight:800;color:#d4e4ff;padding:2px 4px}
+.career-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.stat-box{background:rgba(0,240,255,.08);border:1px solid rgba(0,240,255,.25);border-radius:6px;padding:6px 8px;text-align:center}
+.stat-val{font-size:15px;font-weight:900;color:#fff}
+.stat-lbl{font-size:9.5px;font-weight:700;color:var(--muted)}
+.save-slot-row{gap:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:7px 9px}
+.save-slot-meta{min-width:0;flex:1;overflow:hidden}
+.save-slot-info{font-size:10.5px;font-weight:900;color:#fff;white-space:nowrap}
+.btn-small{background:var(--cyan);color:#06101e;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:900;cursor:pointer}
+#title-screen-modal{z-index:50;background:linear-gradient(90deg,rgba(10,18,36,.65) 0%,rgba(10,18,36,.05) 48%,rgba(10,18,36,.44) 100%);padding:34px 44px 20px;justify-content:space-between}
+.title-main{align-items:flex-start;gap:24px}
+.title-left{width:470px;gap:14px}
+.title-badge{display:inline-block;width:fit-content;background:rgba(255,77,121,.24);border:1px solid var(--coral);color:var(--gold);font-size:10.5px;font-weight:900;padding:4px 12px;border-radius:20px;letter-spacing:1.8px}
+.title-logo{font-size:66px;font-weight:900;line-height:.94;letter-spacing:3px;margin:6px 0 4px;background:linear-gradient(135deg,#fff8e6 0%,#ffbf3c 48%,#ff4d79 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.title-sub{font-size:19px;letter-spacing:5.5px}
+.title-desc{font-size:13px;line-height:1.48;color:#e2ecff;background:rgba(10,17,32,.76);border-left:4px solid var(--gold);padding:10px 14px;border-radius:6px}
+.title-btn{font-size:14px;font-weight:900;padding:11px 18px;border-radius:8px;letter-spacing:1.2px;cursor:pointer}
+.title-btn.secondary{background:rgba(10,18,36,.86);border-color:var(--border)}
+.title-btn-tag{font-size:11px;color:#ffe7a8;font-weight:800}
+.title-right{width:390px}
+.title-panel{padding:14px 16px}
+.title-footer-legend{background:rgba(8,14,28,.88);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-size:11px;font-weight:800;color:#d8e7ff}
+.legend-item{display:flex;align-items:center;gap:6px}
+.ctrl-k{background:rgba(255,191,60,.18);border:1px solid var(--gold);color:var(--gold);font-weight:900;padding:1px 6px;border-radius:4px}
