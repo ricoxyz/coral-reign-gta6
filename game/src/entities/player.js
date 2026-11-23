@@ -63,12 +63,17 @@ export function buildCharacterMesh(options = {}) {
  P(gunMesh, Box(0.065, 0.11, 0.22), lapelMat, 0, -0.02, -0.28);
  P(gunMesh, Cyl(0.028, 0.028, 0.16, 8), gunAccentMat, 0, 0.095, 0.02).rotation.x = Math.PI / 2;
 
- const muzzleFlash = new THREE.Group(); muzzleFlash.position.set(0, 0.02, 0.62);
- const flashMat = new THREE.MeshBasicMaterial({ color: 0xffdf55, transparent: true, opacity: 0.94, blending: THREE.AdditiveBlending });
- P(muzzleFlash, new THREE.OctahedronGeometry(0.11, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0, 0, 0);
- P(muzzleFlash, new THREE.ConeGeometry(0.11, 0.42, 6), flashMat, 0, 0, 0.18).rotation.x = Math.PI / 2;
- P(muzzleFlash, Box(0.44, 0.055, 0.055), flashMat, 0, 0, 0);
- P(muzzleFlash, Box(0.055, 0.44, 0.055), flashMat, 0, 0, 0);
+ const muzzleFlash = new THREE.Group(); muzzleFlash.position.set(0, 0.02, 0.6);
+ const flashMat = new THREE.MeshBasicMaterial({ color: 0xff9f24, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+ const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.94, blending: THREE.AdditiveBlending, depthWrite: false });
+ P(muzzleFlash, new THREE.SphereGeometry(0.065, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfff5cc }), 0, 0, 0);
+ P(muzzleFlash, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff7b1c, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false }), 0, 0, 0.04);
+ P(muzzleFlash, new THREE.ConeGeometry(0.08, 0.32, 7), flashMat, 0, 0, 0.16).rotation.x = Math.PI / 2;
+ for (let sp = 0; sp < 6; sp++) {
+  const ang = (sp / 6) * Math.PI * 2 + 0.35;
+  const ray = P(muzzleFlash, new THREE.ConeGeometry(0.026, 0.19 + (sp % 2) * 0.07, 5), sp % 2 === 0 ? sparkMat : flashMat, Math.cos(ang) * 0.08, Math.sin(ang) * 0.08, 0.03);
+  ray.rotation.z = ang - Math.PI / 2;
+ }
  muzzleFlash.visible = false;
  gunMesh.add(muzzleFlash);
  rightArm.add(gunMesh); group.add(rightArm);

@@ -11,39 +11,48 @@ const L = (c, x1, y1, x2, y2, col, w) => { c.strokeStyle = col; c.lineWidth = w;
 const $ = (id) => document.getElementById(id);
 
 function drawBlock(ctx, id, bx, by, bw, bh, ix, iz) {
- B(ctx, bx, by, bw, bh, '#1d2d44');
- ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
- const cx = bx + bw * 0.5, cy = by + bh * 0.5, m = Math.min(bw, bh);
+ B(ctx, bx, by, bw, bh, '#132034');
+ ctx.strokeStyle = 'rgba(255,255,255,.08)'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, bw, bh);
+
+ const pad = 4, iw = bw - pad * 2, ih = bh - pad * 2;
+ if (iw < 8 || ih < 8) return;
+
+ const roof = (rx, ry, rw, rh, fill, accent) => {
+  B(ctx, rx + 2, ry + 2, rw, rh, 'rgba(5,10,20,0.45)');
+  B(ctx, rx, ry, rw, rh, fill);
+  if (accent) B(ctx, rx, ry, rw, 2.5, accent);
+ };
+
  if (id === 'solana_strip') {
-  const pal = ['#ff5e8e', '#ffb86c', '#ffd97d'];
-  B(ctx, bx + 5, by + 5, bw * 0.44, bh - 7, 'rgba(8,14,26,.65)');
-  B(ctx, bx + 3, by + 3, bw * 0.42, bh - 8, pal[(ix + iz) % 3]);
-  B(ctx, bx + 3, by + 3, bw * 0.76, bh * 0.32, pal[(ix + iz + 1) % 3]);
-  C(ctx, bx + bw * 0.68, by + bh * 0.66, m * 0.22 + 2, '#fff5db');
-  C(ctx, bx + bw * 0.68, by + bh * 0.66, m * 0.22, '#00f0ff');
+  const cols = ['#3e253d', '#4b2a42', '#352b46'], acc = ['#ff4d7999', '#ff9f4388', '#00f0ff88'];
+  roof(bx + pad, by + pad, iw * 0.46, ih * 0.56, cols[(ix + iz) % 3], acc[(ix + iz) % 3]);
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.42, cols[(ix + iz + 1) % 3], acc[(ix + iz + 1) % 3]);
+  B(ctx, bx + pad + iw * 0.54, by + pad + ih * 0.52, iw * 0.44, ih * 0.44, '#0c4f69');
+  B(ctx, bx + pad, by + pad + ih * 0.64, iw * 0.46, ih * 0.34, '#242c44');
  } else if (id === 'coral_marina') {
-  B(ctx, bx + 3, by + 3, bw - 6, bh * 0.42, '#0b4f6c');
-  for (let k = 0; k < 3; k++) B(ctx, bx + 7 + k * bw * 0.28, by + 7, bw * 0.18, bh * 0.22, '#fff');
-  B(ctx, bx + 4, by + bh * 0.54, bw * 0.54, bh * 0.38, '#2ec4b6');
-  B(ctx, bx + bw * 0.62, by + bh * 0.54, bw * 0.3, bh * 0.38, '#ff9f1c');
+  roof(bx + pad, by + pad, iw * 0.58, ih * 0.44, '#183b54', '#00f0ff88');
+  roof(bx + pad + iw * 0.64, by + pad, iw * 0.36, ih * 0.94, '#1d4661', '#2ec4b688');
+  B(ctx, bx + pad, by + pad + ih * 0.52, iw * 0.58, ih * 0.44, '#0f283d');
+  B(ctx, bx + pad + 4, by + pad + ih * 0.62, iw * 0.42, ih * 0.22, '#1a5a75');
  } else if (id === 'vidrio_downtown') {
-  L(ctx, bx + 2, by + bh - 2, bx + bw - 2, by + 2, '#4a6182', 4);
-  C(ctx, cx, cy, m * 0.3, (ix + iz) % 2 ? '#f9c74f' : '#4ea8de'); C(ctx, cx, cy, m * 0.16, '#caf0f8');
-  B(ctx, bx + 3, by + 3, bw * 0.32, bh * 0.32, '#56cfe1'); B(ctx, bx + bw * 0.65, by + bh * 0.65, bw * 0.32, bh * 0.32, '#56cfe1');
+  roof(bx + pad, by + pad, iw * 0.46, ih * 0.46, '#203352', '#ffbf3c77');
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.54, '#263d61', '#00e5ff66');
+  roof(bx + pad, by + pad + ih * 0.54, iw * 0.46, ih * 0.44, '#1b2d47', '#ffbf3c66');
+  B(ctx, bx + pad + iw * 0.56, by + pad + ih * 0.62, iw * 0.4, ih * 0.32, '#17263d');
  } else if (id === 'mercado_viejo') {
-  L(ctx, bx, cy, bx + bw, cy, '#384b66', 3); L(ctx, cx, by, cx, by + bh, '#384b66', 3);
-  ctx.fillStyle = '#f3722c'; ctx.beginPath();
-  for (let a = 0; a < 8; a++) ctx.lineTo(cx + Math.cos(a * 0.785 + 0.39) * m * 0.36, cy + Math.sin(a * 0.785 + 0.39) * m * 0.36);
-  ctx.closePath(); ctx.fill(); C(ctx, cx, cy, m * 0.17, '#f9c74f');
+  B(ctx, bx + pad, by + pad, iw, ih, '#1f192b');
+  roof(bx + pad, by + pad, iw * 0.44, ih * 0.44, '#472c2d', '#ff7e2988');
+  roof(bx + pad + iw * 0.52, by + pad, iw * 0.48, ih * 0.44, '#3d2838', '#ff4d7977');
+  roof(bx + pad, by + pad + ih * 0.54, iw * 0.98, ih * 0.42, '#422c30', '#ffbe3d77');
+  B(ctx, bx + pad + iw * 0.28, by + pad + ih * 0.32, iw * 0.44, ih * 0.32, '#191424');
  } else if (id === 'palma_pier') {
-  B(ctx, bx + 2, by + 2, bw - 4, bh - 4, '#2a4747'); C(ctx, bx + bw * 0.45, cy, m * 0.34, '#43aa8b');
-  B(ctx, bx + bw * 0.55, by + 5, bw * 0.36, bh * 0.34, '#ff4d79'); B(ctx, bx + bw * 0.55, by + bh * 0.56, bw * 0.36, bh * 0.34, '#f9c74f');
+  B(ctx, bx + pad, by + pad, iw, ih, '#183635');
+  roof(bx + pad + 3, by + pad + 3, iw * 0.48, ih * 0.44, '#214d43', '#4eff9188');
+  roof(bx + pad + iw * 0.56, by + pad + ih * 0.48, iw * 0.4, ih * 0.46, '#382436', '#ff4d7988');
  } else {
-  B(ctx, bx + 1, by + 1, bw - 2, bh - 2, '#232942');
-  ctx.strokeStyle = '#5c6784'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(bx + 3, by + bh - 4);
-  ctx.bezierCurveTo(bx + bw * 0.85, by + bh * 0.75, bx + bw * 0.15, by + bh * 0.25, bx + bw - 3, by + 4); ctx.stroke();
-  B(ctx, bx + 5, by + 5, bw * 0.36, bh * 0.28, '#c77dff'); B(ctx, bx + 9, by + 9 + bh * 0.28, bw * 0.22, bh * 0.16, '#00f0ff');
-  C(ctx, bx + bw * 0.72, by + bh * 0.68, m * 0.22, '#ffb5a7');
+  B(ctx, bx + pad, by + pad, iw, ih, '#1c1f36');
+  roof(bx + pad, by + pad, iw * 0.5, ih * 0.46, '#2e294e', '#b978ff88');
+  roof(bx + pad + iw * 0.48, by + pad + ih * 0.54, iw * 0.5, ih * 0.44, '#272645', '#00f0ff66');
  }
 }
 
@@ -93,31 +102,63 @@ export function renderFullPauseMap(state, saveSystem) {
 
  for (const d of DISTRICTS) {
   const x0 = tx(d.bounds.minX), y0 = ty(d.bounds.minZ), lblY = d.id === 'solana_strip' ? y0 + 28 : y0 + 5;
-  ctx.strokeStyle = d.color; ctx.lineWidth = 2.2; ctx.strokeRect(x0, y0, tx(d.bounds.maxX) - x0, ty(d.bounds.maxZ) - y0);
+  ctx.save();
+  ctx.strokeStyle = `${d.color}88`; ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]);
+  ctx.strokeRect(x0, y0, tx(d.bounds.maxX) - x0, ty(d.bounds.maxZ) - y0);
+  ctx.restore();
   ctx.font = '900 10.5px "Segoe UI", sans-serif';
   const tw = ctx.measureText(d.name).width;
-  B(ctx, x0 + 5, lblY, tw + 12, 17, 'rgba(8,15,28,.92)'); ctx.strokeRect(x0 + 5, lblY, tw + 12, 17);
-  ctx.fillStyle = '#fff'; ctx.fillText(d.name, x0 + 11, lblY + 12);
+  B(ctx, x0 + 5, lblY, tw + 14, 18, 'rgba(6,12,24,.94)');
+  ctx.strokeStyle = d.color; ctx.lineWidth = 1.6; ctx.strokeRect(x0 + 5, lblY, tw + 14, 18);
+  ctx.fillStyle = '#fff'; ctx.fillText(d.name, x0 + 12, lblY + 12.5);
  }
 
+ // Clean street-grid GPS route turning cleanly along arterial avenues
  const px = tx(state.player.x), py = ty(state.player.z), wp = state.mission.waypoint;
  if (wp) {
-  const wx = tx(wp.x), wy = ty(wp.z), midY = (py + wy) * 0.5;
-  ctx.strokeStyle = 'rgba(255,77,121,.55)'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, midY); ctx.lineTo(wx, wy); ctx.stroke();
-  ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3.2; ctx.setLineDash([7, 4]); ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, midY); ctx.lineTo(wx, wy); ctx.stroke(); ctx.setLineDash([]);
-  B(ctx, px + 12, midY - 8, 118, 18, 'rgba(8,15,28,.94)'); ctx.strokeRect(px + 12, midY - 8, 118, 18);
-  ctx.fillStyle = '#00f0ff'; ctx.font = '900 9.5px "Segoe UI", sans-serif'; ctx.fillText('GPS ROUTE · 0.84 KM', px + 19, midY + 4.5);
+  const nearest = (arr, v) => arr.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+  const sx = tx(nearest(ROAD_X, state.player.x)), sz = ty(nearest(ROAD_Z, (state.player.z + wp.z) * 0.5));
+  const ex = tx(nearest(ROAD_X, wp.x)), wx = tx(wp.x), wy = ty(wp.z);
+  const pts = [[px, py], [sx, py], [sx, sz], [ex, sz], [ex, wy], [wx, wy]];
+
+  const tracePath = () => {
+   ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+   for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  };
+  ctx.save();
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,46,128,0.42)'; ctx.lineWidth = 9.5; tracePath(); ctx.stroke();
+  ctx.strokeStyle = '#ff3b82'; ctx.lineWidth = 4.6; tracePath(); ctx.stroke();
+  ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 2.2; ctx.setLineDash([8, 5]); tracePath(); ctx.stroke();
+  ctx.restore();
+
+  const lblX = Math.min(w - 134, Math.max(8, (sx + ex) * 0.5 - 56));
+  const lblY = sz - 22;
+  B(ctx, lblX, lblY, 118, 18, 'rgba(7,13,26,.95)');
+  ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1.4; ctx.strokeRect(lblX, lblY, 118, 18);
+  ctx.fillStyle = '#00f0ff'; ctx.font = '900 9.5px "Segoe UI", sans-serif'; ctx.fillText('GPS ROUTE · 0.84 KM', lblX + 7, lblY + 12.5);
  }
 
- ctx.textAlign = 'center'; ctx.font = '900 9.5px "Segoe UI", sans-serif';
+ // Crisp compact POI pins (H, S, P, R)
+ const pinCircle = (x, y, r, fill, text, txtCol = '#050c18') => {
+  C(ctx, x, y, r + 1.5, '#071224');
+  C(ctx, x, y, r, fill);
+  ctx.fillStyle = txtCol; ctx.fillText(text, x, y + 3);
+ };
+ ctx.textAlign = 'center'; ctx.font = '900 8.5px "Segoe UI", sans-serif';
  for (const n of SAFEHOUSE_AND_SHOP_NODES) {
-  B(ctx, tx(n.x) - 7, ty(n.z) - 7, 14, 14, n.code === 'S' ? '#00f0ff' : n.code === 'P' ? '#ff7e29' : '#ff4d79');
-  ctx.fillStyle = '#050c18'; ctx.fillText(n.code, tx(n.x), ty(n.z) + 3.5);
+  const nx = tx(n.x), ny = ty(n.z);
+  B(ctx, nx - 6.5, ny - 6.5, 13, 13, '#071224');
+  B(ctx, nx - 5.5, ny - 5.5, 11, 11, n.code === 'S' ? '#00f0ff' : n.code === 'P' ? '#ff7e29' : '#ff4d79');
+  ctx.fillStyle = '#050c18'; ctx.fillText(n.code, nx, ny + 3);
  }
- for (const r of STREET_RACES) { C(ctx, tx(r.x), ty(r.z), 7.5, '#b978ff'); ctx.fillStyle = '#fff'; ctx.fillText('R', tx(r.x), ty(r.z) + 3); }
+ for (const r of STREET_RACES) pinCircle(tx(r.x), ty(r.z), 6, '#b978ff', 'R', '#fff');
  for (const m of STORY_MISSIONS) {
-  C(ctx, tx(m.waypoint.x), ty(m.waypoint.z), 8.5, m.medal === 'ACTIVE' ? '#ff4d79' : '#ffbf3c');
-  ctx.fillStyle = '#050c18'; ctx.fillText(m.medal === 'ACTIVE' ? 'H' : m.num, tx(m.waypoint.x), ty(m.waypoint.z) + 3);
+  const isAct = m.medal === 'ACTIVE';
+  pinCircle(tx(m.waypoint.x), ty(m.waypoint.z), isAct ? 7.5 : 6, isAct ? '#ff4d79' : '#ffbf3c', isAct ? 'H' : m.num, isAct ? '#fff' : '#050c18');
  }
- ctx.textAlign = 'left'; C(ctx, px, py, 7.5, '#4eff91');
+ ctx.textAlign = 'left';
+ C(ctx, px, py, 8.5, 'rgba(78,255,145,0.28)');
+ C(ctx, px, py, 5.5, '#071224');
+ C(ctx, px, py, 4.2, '#4eff91');
 }

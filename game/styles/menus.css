@@ -40,18 +40,23 @@
 .save-slot-meta{min-width:0;flex:1;overflow:hidden}
 .save-slot-info{font-size:10.5px;font-weight:900;color:#fff;white-space:nowrap}
 .btn-small{background:var(--cyan);color:#06101e;border:none;border-radius:4px;padding:4px 8px;font-size:10px;font-weight:900;cursor:pointer}
-#title-screen-modal{z-index:50;background:linear-gradient(90deg,rgba(10,18,36,.65) 0%,rgba(10,18,36,.05) 48%,rgba(10,18,36,.44) 100%);padding:34px 44px 20px;justify-content:space-between}
-.title-main{align-items:flex-start;gap:24px}
-.title-left{width:470px;gap:14px}
-.title-badge{display:inline-block;width:fit-content;background:rgba(255,77,121,.24);border:1px solid var(--coral);color:var(--gold);font-size:10.5px;font-weight:900;padding:4px 12px;border-radius:20px;letter-spacing:1.8px}
-.title-logo{font-size:66px;font-weight:900;line-height:.94;letter-spacing:3px;margin:6px 0 4px;background:linear-gradient(135deg,#fff8e6 0%,#ffbf3c 48%,#ff4d79 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.title-sub{font-size:19px;letter-spacing:5.5px}
-.title-desc{font-size:13px;line-height:1.48;color:#e2ecff;background:rgba(10,17,32,.76);border-left:4px solid var(--gold);padding:10px 14px;border-radius:6px}
-.title-btn{font-size:14px;font-weight:900;padding:11px 18px;border-radius:8px;letter-spacing:1.2px;cursor:pointer}
-.title-btn.secondary{background:rgba(10,18,36,.86);border-color:var(--border)}
+#title-screen-modal{z-index:50;background:linear-gradient(90deg,rgba(8,14,28,.54) 0%,rgba(8,14,28,.02) 42%,rgba(8,14,28,.08) 100%);padding:36px 44px 28px;justify-content:space-between}
+.title-main{flex:1;align-items:stretch;justify-content:space-between;gap:24px}
+.title-left{width:380px;gap:18px;justify-content:flex-start;padding-top:6px}
+.title-badge{display:inline-block;width:fit-content;background:rgba(255,77,121,.22);border:1px solid var(--coral);color:var(--gold);font-size:10px;font-weight:900;padding:4px 11px;border-radius:20px;letter-spacing:1.8px}
+.title-logo{font-size:66px;font-weight:900;line-height:.94;letter-spacing:3px;margin:4px 0;background:linear-gradient(135deg,#fff8e6 0%,#ffbf3c 48%,#ff4d79 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 16px rgba(0,0,0,.45))}
+.title-sub{font-size:19px;letter-spacing:5.5px;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.title-desc,.title-footer-legend{display:none}
+.title-actions{gap:9px}
+.title-btn{font-size:13.5px;font-weight:900;padding:11px 16px;border-radius:8px;letter-spacing:1.2px;cursor:pointer}
+.title-btn.secondary{background:rgba(10,18,36,.72);backdrop-filter:blur(8px);border-color:rgba(255,255,255,.26)}
 .title-btn-tag{font-size:11px;color:#ffe7a8;font-weight:800}
-.title-right{width:390px}
-.title-panel{padding:14px 16px}
-.title-footer-legend{background:rgba(8,14,28,.88);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-size:11px;font-weight:800;color:#d8e7ff}
+.title-right{width:326px;align-self:flex-end}
+.title-panel{background:rgba(8,15,30,.52);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.22);padding:10px 12px}
+.title-panel h3{margin:0 0 6px;font-size:10.5px;letter-spacing:1px}
+.title-panel .save-slots-grid{gap:5px}
+.title-panel .save-slot-row{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);padding:5px 8px;border-radius:6px}
+.title-panel .save-slot-info{font-size:10px}
+.title-panel .save-slot-sub{font-size:9px}
 .legend-item{display:flex;align-items:center;gap:6px}
 .ctrl-k{background:rgba(255,191,60,.18);border:1px solid var(--gold);color:var(--gold);font-weight:900;padding:1px 6px;border-radius:4px}

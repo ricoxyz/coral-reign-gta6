@@ -6,13 +6,13 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
  scene.add(fxGroup);
  const tracers = [], explosions = [];
 
- function spawnTracer(fromX, fromY, fromZ, toX, toY, toZ, colorHex = 0xffdf40) {
+ function spawnTracer(fromX, fromY, fromZ, toX, toY, toZ, colorHex = 0xffae2b) {
   const len = Math.max(0.5, Math.hypot(toX - fromX, toY - fromY, toZ - fromZ));
   const holder = new THREE.Group();
-  const outerGeo = new THREE.CylinderGeometry(0.018, 0.046, len, 6); outerGeo.rotateX(Math.PI / 2);
-  holder.add(new THREE.Mesh(outerGeo, Bas({ color: colorHex, transparent: true, opacity: 0.94, blending: THREE.AdditiveBlending })));
-  const coreGeo = new THREE.CylinderGeometry(0.008, 0.02, len * 0.92, 6); coreGeo.rotateX(Math.PI / 2);
-  holder.add(new THREE.Mesh(coreGeo, Bas({ color: 0xffffff })));
+  const outerGeo = new THREE.CylinderGeometry(0.014, 0.038, len, 8); outerGeo.rotateX(Math.PI / 2);
+  holder.add(new THREE.Mesh(outerGeo, Bas({ color: colorHex, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const coreGeo = new THREE.CylinderGeometry(0.006, 0.015, len * 0.94, 6); coreGeo.rotateX(Math.PI / 2);
+  holder.add(new THREE.Mesh(coreGeo, Bas({ color: 0xfff8dc, transparent: true, opacity: 0.96, blending: THREE.AdditiveBlending, depthWrite: false })));
   holder.position.set((fromX + toX) * 0.5, (fromY + toY) * 0.5, (fromZ + toZ) * 0.5);
   holder.lookAt(toX, toY, toZ);
   fxGroup.add(holder);
@@ -23,43 +23,46 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
   const holder = new THREE.Group();
   holder.position.set(x, y, z);
 
-  const coreA = new THREE.Mesh(new THREE.IcosahedronGeometry(0.68 * s, 0), Bas({ color: 0xfff8b8 }));
-  coreA.position.y = 0.32 * s; coreA.scale.set(1.15, 1.35, 1.05);
-  const coreB = new THREE.Mesh(new THREE.OctahedronGeometry(0.84 * s, 0), Bas({ color: 0xffd447 }));
-  coreB.position.y = 0.38 * s; coreB.rotation.set(0.6, 0.8, 0.4); coreB.scale.set(1.25, 0.95, 1.2);
-  holder.add(coreA, coreB);
+  // Glowing core fireball + warm additive fire halo (no solid black rock polygons)
+  const coreA = new THREE.Mesh(new THREE.SphereGeometry(0.38 * s, 12, 10), Bas({ color: 0xfff5c0, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false }));
+  coreA.position.y = 0.24 * s;
+  const coreB = new THREE.Mesh(new THREE.SphereGeometry(0.76 * s, 12, 10), Bas({ color: 0xff7b19, transparent: true, opacity: 0.62, blending: THREE.AdditiveBlending, depthWrite: false }));
+  coreB.position.y = 0.34 * s; coreB.scale.set(1.25, 0.9, 1.15);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.35 * s, 12, 10), Bas({ color: 0xff4210, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.position.y = 0.42 * s;
+  holder.add(coreA, coreB, halo);
 
-  const fCols = [0xffa619, 0xff6214, 0xe8251a, 0xff8c1a, 0xff3b14];
-  for (let i = 0; i < 14; i++) {
-   const az = (i / 14) * Math.PI * 2 + (i % 3) * 0.18, el = 0.22 + (i % 4) * 0.26;
-   const t = new THREE.Mesh(new THREE.ConeGeometry((0.34 + (i % 2) * 0.16) * s, (0.95 + (i % 3) * 0.42) * s, 5), Bas({ color: fCols[i % 5], transparent: true, opacity: 0.94 }));
-   t.position.set(Math.cos(az) * 0.42 * s, (0.28 + (i % 3) * 0.24) * s, Math.sin(az) * 0.42 * s);
+  // Radial flame tongues
+  const fCols = [0xffc93b, 0xff8519, 0xff4d1a, 0xffa326, 0xff6214];
+  for (let i = 0; i < 12; i++) {
+   const az = (i / 12) * Math.PI * 2 + (i % 3) * 0.2, el = 0.25 + (i % 3) * 0.28;
+   const t = new THREE.Mesh(
+    new THREE.ConeGeometry((0.24 + (i % 2) * 0.1) * s, (0.85 + (i % 3) * 0.32) * s, 7),
+    Bas({ color: fCols[i % 5], transparent: true, opacity: 0.78, blending: THREE.AdditiveBlending, depthWrite: false })
+   );
+   t.position.set(Math.cos(az) * 0.36 * s, (0.28 + (i % 3) * 0.2) * s, Math.sin(az) * 0.36 * s);
    t.rotation.set(Math.sin(az) * (1.57 - el), 0, -Math.cos(az) * (1.57 - el));
    holder.add(t);
   }
 
-  [[0.42, 0.45, 0.22, 1.3, 0.85, 1.1, 0.66, 0xff6b14, 1], [-0.46, 0.52, -0.24, 1.1, 1.3, 0.9, 0.64, 0xe8321a, 1], [0.15, 0.88, -0.35, 1.2, 1.15, 0.85, 0.62, 0xff981a, 1], [-0.25, 0.74, 0.38, 0.95, 1.25, 1.2, 0.58, 0xff4914, 1], [-0.35, 1.35, -0.22, 1.35, 0.82, 1.15, 0.74, 0x2c2529, 0.86], [0.38, 1.55, 0.18, 1.25, 0.78, 1.2, 0.68, 0x231f24, 0.82], [-0.12, 1.98, 0.25, 1.4, 0.75, 1.25, 0.82, 0x1c191f, 0.76], [0.24, 2.38, -0.18, 1.45, 0.72, 1.3, 0.88, 0x17151a, 0.68]].forEach(([ox, oy, oz, sx, sy, sz, r, c, op], i) => {
-   const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r * s, 0), Bas({ color: c, transparent: op < 1, opacity: op }));
-   m.position.set(ox * s, oy * s, oz * s); m.scale.set(sx, sy, sz); m.rotation.set(i * 0.7, i * 1.1, i * 0.5);
-   holder.add(m);
+  // Soft low-opacity warm smoke wisps
+  [[-0.32, 1.05, -0.18, 0.62, 0x8f5646, 0.22], [0.34, 1.28, 0.15, 0.68, 0x784a48, 0.19], [-0.1, 1.55, 0.2, 0.74, 0x5c3e44, 0.16]].forEach(([ox, oy, oz, r, c, op]) => {
+   const puff = new THREE.Mesh(new THREE.SphereGeometry(r * s, 12, 10), Bas({ color: c, transparent: true, opacity: op, depthWrite: false }));
+   puff.position.set(ox * s, oy * s, oz * s); puff.scale.set(1.25, 0.85, 1.15);
+   holder.add(puff);
   });
 
-  const shardMat = new THREE.MeshStandardMaterial({ color: 0x1e222b, emissive: 0x441200, roughness: 0.4, metalness: 0.8 });
+  // Radial flying spark streaks
   for (let i = 0; i < 16; i++) {
-   const ang = (i / 16) * Math.PI * 2, d = (1.1 + (i % 4) * 0.38) * s, h = (0.35 + (i % 5) * 0.36) * s;
-   const em = new THREE.Mesh(new THREE.BoxGeometry(0.06 * s, 0.06 * s, (0.55 + (i % 3) * 0.25) * s), Bas({ color: i % 2 === 0 ? 0xffe866 : 0xff5510 }));
-   em.position.set(Math.cos(ang) * d, h, Math.sin(ang) * d); em.rotation.set(0.4 + (i % 3) * 0.2, -ang, 0);
+   const ang = (i / 16) * Math.PI * 2, d = (0.95 + (i % 4) * 0.34) * s, h = (0.3 + (i % 5) * 0.32) * s;
+   const em = new THREE.Mesh(new THREE.BoxGeometry(0.045 * s, 0.045 * s, (0.58 + (i % 3) * 0.24) * s), Bas({ color: i % 2 === 0 ? 0xffe878 : 0xff6a14, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false }));
+   em.position.set(Math.cos(ang) * d, h, Math.sin(ang) * d); em.rotation.set(0.45 + (i % 3) * 0.2, -ang, 0);
    holder.add(em);
-   if (i % 2 === 0) {
-    const sh = new THREE.Mesh(new THREE.TetrahedronGeometry(0.21 * s, 0), shardMat);
-    sh.position.set(Math.cos(ang + 0.15) * d * 1.15, h + 0.25 * s, Math.sin(ang + 0.15) * d * 1.15);
-    sh.rotation.set(i * 0.8, i * 1.2, i * 0.5); holder.add(sh);
-   }
   }
 
-  const sc = new THREE.Mesh(new THREE.CircleGeometry(1.75 * s, 18), Bas({ color: 0x12131a, transparent: true, opacity: 0.76, depthWrite: false }));
+  const sc = new THREE.Mesh(new THREE.CircleGeometry(1.55 * s, 18), Bas({ color: 0x161218, transparent: true, opacity: 0.45, depthWrite: false }));
   sc.rotation.x = -Math.PI / 2; sc.position.y = -y + 0.07;
-  const sr = new THREE.Mesh(new THREE.RingGeometry(1.35 * s, 1.85 * s, 20), Bas({ color: 0xff7e29, transparent: true, opacity: 0.65, side: THREE.DoubleSide, depthWrite: false }));
+  const sr = new THREE.Mesh(new THREE.RingGeometry(1.15 * s, 1.75 * s, 24), Bas({ color: 0xff8a2b, transparent: true, opacity: 0.68, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
   sr.rotation.x = -Math.PI / 2; sr.position.y = -y + 0.09;
   holder.add(sc, sr); fxGroup.add(holder);
   explosions.push({ mesh: holder, ttl: 0.85 });
@@ -73,9 +76,9 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
    st.rotation.set(-Math.PI / 2, 0, -rotY); st.position.set(wx - Math.sin(rotY) * 3.5, 0.12, wz - Math.cos(rotY) * 3.5);
    fxGroup.add(st);
    for (let k = 0; k < 4; k++) {
-    const sm = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42 + k * 0.16, 0), Bas({ color: 0xdce6f7, transparent: true, opacity: 0.34 - k * 0.06 }));
-    sm.position.set(wx - Math.sin(rotY) * (0.5 + k * 1.1), 0.32 + k * 0.18, wz - Math.cos(rotY) * (0.5 + k * 1.1));
-    sm.scale.set(1.25, 0.8, 1.15); fxGroup.add(sm);
+    const sm = new THREE.Mesh(new THREE.SphereGeometry(0.36 + k * 0.14, 10, 8), Bas({ color: 0xdce6f7, transparent: true, opacity: 0.22 - k * 0.04, depthWrite: false }));
+    sm.position.set(wx - Math.sin(rotY) * (0.5 + k * 1.1), 0.3 + k * 0.16, wz - Math.cos(rotY) * (0.5 + k * 1.1));
+    sm.scale.set(1.25, 0.78, 1.15); fxGroup.add(sm);
    }
   }
  }

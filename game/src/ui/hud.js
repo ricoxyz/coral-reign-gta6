@@ -21,7 +21,7 @@ function updateFloatingEnemyCallouts(state, camera) {
  if (!uiLayer) return;
  let box = $('enemy-callouts-layer');
  if (!box) { box = document.createElement('div'); box.id = 'enemy-callouts-layer'; uiLayer.appendChild(box); }
- if (state.player.inVehicle || !camera || !window.THREE) { box.innerHTML = ''; return; }
+ if (state.activeShot === 'combat' || state.player.inVehicle || !camera || !window.THREE) { box.innerHTML = ''; return; }
  const p = state.player, specs = [['LIEUTENANT', 22], ['ENFORCER', 34], ['HEAVY GUARD', 29]];
  let html = '', shown = 0;
  for (const en of state.entities.enemies || []) {
@@ -31,8 +31,8 @@ function updateFloatingEnemyCallouts(state, camera) {
   const sx = Math.round((wp.x * 0.5 + 0.5) * window.innerWidth), sy = Math.round((-wp.y * 0.5 + 0.5) * window.innerHeight);
   if (sx < 250 || sx > window.innerWidth - 250 || sy < 40 || sy > window.innerHeight - 160) continue;
   const [lbl, dOvr] = specs[shown % 3];
-  const dist = state.activeShot === 'combat' ? dOvr : Math.max(8, Math.round(Math.hypot(en.x - p.x, en.z - p.z)));
-  const role = state.activeShot === 'combat' ? lbl : (en.role || 'ENFORCER');
+  const dist = Math.max(8, Math.round(Math.hypot(en.x - p.x, en.z - p.z)));
+  const role = en.role || lbl;
   const hp = Math.max(15, Math.min(100, Math.round(en.hp || 72)));
   html += `<div class="enemy-tag" style="left:${sx}px;top:${sy}px;"><div>▼ ${role} · <span style="color:#00f0ff;">${dist}m</span></div><div class="enemy-hp"><div style="width:${hp}%;"></div></div></div>`;
   if (++shown >= 3) break;
@@ -57,7 +57,7 @@ export function updateHUD(state, weaponsSys, camera) {
   ['hud-mission-obj', `NEXT: ${m.objective}`],
   ['hud-mission-dist', `${m.distance}m`],
   ['hud-cash', `$${p.cash.toLocaleString()}`],
-  ['hud-clock', `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${hrs >= 19 ? 'DUSK' : 'SUNSET'}`],
+  ['hud-clock', `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${hrs >= 20 ? 'TWILIGHT' : hrs >= 19 ? 'DUSK' : 'SUNSET'}`],
   ['hud-rank', `RANK ${p.rank} · ${p.rankTitle}`],
   ['hud-rp', `${p.respect.toLocaleString()} RP`],
   ['hud-wanted-label', tier.label],
@@ -118,11 +118,12 @@ export function updateHUD(state, weaponsSys, camera) {
 
  const hb = $('world-hijack-badge');
  if (hb) {
-  if (!p.inVehicle && nearCar && camera && window.THREE) {
+  if (state.activeShot !== 'combat' && !p.inVehicle && nearCar && camera && window.THREE) {
    const wp = new window.THREE.Vector3(nearCar.x, 2.25, nearCar.z).project(camera);
-   if (wp.z < 1) {
+   const sy = Math.round((-wp.y * 0.5 + 0.5) * window.innerHeight);
+   if (wp.z < 1 && sy > window.innerHeight * 0.32) {
     hb.style.left = `${Math.round((wp.x * 0.5 + 0.5) * window.innerWidth)}px`;
-    hb.style.top = `${Math.round((-wp.y * 0.5 + 0.5) * window.innerHeight)}px`;
+    hb.style.top = `${sy}px`;
     hb.innerHTML = `<span class="key-badge">F</span><span>Hijack ${nearCar.name}</span>`;
     hb.classList.add('visible');
    } else hb.classList.remove('visible');
