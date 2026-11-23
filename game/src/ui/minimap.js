@@ -1,4 +1,4 @@
-// Real-time 2D Radar Minimap Renderer: roads, ocean coastline, GPS route, police cones, & mission star
+// Real-time 2D Radar Minimap Renderer: colorful city blocks, golden beach, turquoise ocean, GPS route, & high-contrast police blips
 import { ROAD_X, ROAD_Z } from '../world/roads.js';
 
 export function renderMinimap(state) {
@@ -8,31 +8,61 @@ export function renderMinimap(state) {
   const w = canvas.width;
   const h = canvas.height;
 
-  ctx.fillStyle = '#081120';
+  ctx.fillStyle = '#18263b';
   ctx.fillRect(0, 0, w, h);
 
   const px = state.player.x;
   const pz = state.player.z;
-  const scale = 0.48; // meters to pixels
+  const scale = 0.52; // meters to pixels
 
   const toMapX = (wx) => w * 0.5 + (wx - px) * scale;
   const toMapY = (wz) => h * 0.5 + (wz - pz) * scale;
 
-  // Draw Ocean & Sandy Beach on East (+X)
+  // Draw Vivid Golden Beach & Sparkling Turquoise Ocean on East (+X)
   const beachX = toMapX(225);
-  const oceanX = toMapX(280);
+  const oceanX = toMapX(276);
   if (beachX < w) {
-    ctx.fillStyle = '#c8a56e';
+    ctx.fillStyle = '#f5d48c';
     ctx.fillRect(Math.max(0, beachX), 0, w - Math.max(0, beachX), h);
   }
   if (oceanX < w) {
-    ctx.fillStyle = '#006b8f';
+    ctx.fillStyle = '#00bce3';
     ctx.fillRect(Math.max(0, oceanX), 0, w - Math.max(0, oceanX), h);
+    // White surf line
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(Math.max(0, oceanX - 1.5), 0, 2.5, h);
+  }
+
+  // Draw Bright Colorful Pastel City Blocks between Roads
+  const blockColors = ['#ff7597', '#3ce6d0', '#ffbe4f', '#59bfff', '#ff8c52', '#a882ff'];
+  for (let ix = 0; ix < ROAD_X.length - 1; ix++) {
+    for (let iz = 0; iz < ROAD_Z.length - 1; iz++) {
+      const bx0 = toMapX(ROAD_X[ix] + 13);
+      const by0 = toMapY(ROAD_Z[iz] + 13);
+      const bw = (ROAD_X[ix + 1] - ROAD_X[ix] - 26) * scale;
+      const bh = (ROAD_Z[iz + 1] - ROAD_Z[iz] - 26) * scale;
+      if (bx0 + bw < 0 || bx0 > w || by0 + bh < 0 || by0 > h) continue;
+
+      ctx.fillStyle = '#2c3d59';
+      ctx.fillRect(bx0, by0, bw, bh);
+
+      // Individual colorful 3D-style building footprints inside each block
+      const c1 = blockColors[(ix + iz) % blockColors.length];
+      const c2 = blockColors[(ix * 2 + iz + 1) % blockColors.length];
+      const subW = bw * 0.42;
+      const subH = bh * 0.42;
+      ctx.fillStyle = c1;
+      ctx.fillRect(bx0 + 2, by0 + 2, subW, subH);
+      ctx.fillRect(bx0 + bw - subW - 2, by0 + bh - subH - 2, subW, subH);
+      ctx.fillStyle = c2;
+      ctx.fillRect(bx0 + bw - subW - 2, by0 + 2, subW, subH);
+      ctx.fillRect(bx0 + 2, by0 + bh - subH - 2, subW, subH);
+    }
   }
 
   // Draw Palma Dorada Road Grid
-  ctx.strokeStyle = '#2d374d';
-  ctx.lineWidth = 7;
+  ctx.strokeStyle = '#475670';
+  ctx.lineWidth = 7.5;
   for (let i = 0; i < ROAD_X.length; i++) {
     const mx = toMapX(ROAD_X[i]);
     ctx.beginPath();
@@ -48,10 +78,10 @@ export function renderMinimap(state) {
     ctx.stroke();
   }
 
-  // Highlight Solana Strip Boulevard in Neon Coral
+  // Highlight Solana Strip & Oceanfront Boulevards
   const solanaX = toMapX(110);
-  ctx.strokeStyle = 'rgba(255, 77, 121, 0.45)';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255, 200, 59, 0.75)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(solanaX, 0);
   ctx.lineTo(solanaX, h);
@@ -92,16 +122,23 @@ export function renderMinimap(state) {
     if (vx < 0 || vx > w || vy < 0 || vy > h) continue;
 
     if (v.isPolice) {
-      // Flashing red/blue police radar cone + blip
-      ctx.fillStyle = 'rgba(255, 30, 66, 0.22)';
+      // High-contrast red/blue split police blip + radar cone
+      ctx.fillStyle = 'rgba(255, 23, 68, 0.25)';
       ctx.beginPath();
-      ctx.arc(vx, vy, 14, 0, Math.PI * 2);
+      ctx.arc(vx, vy, 13, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = (Math.floor(state.time * 8 + i) % 2 === 0) ? '#ff1744' : '#00b0ff';
+      ctx.fillStyle = '#ff1744';
       ctx.beginPath();
-      ctx.arc(vx, vy, 4, 0, Math.PI * 2);
+      ctx.arc(vx - 2, vy, 4, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = '#00d8ff';
+      ctx.beginPath();
+      ctx.arc(vx + 2, vy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+      ctx.strokeRect(vx - 4.5, vy - 3.5, 9, 7);
     } else if (v.isMissionTarget) {
       ctx.fillStyle = '#ffbf3c';
       ctx.fillRect(vx - 4, vy - 4, 8, 8);

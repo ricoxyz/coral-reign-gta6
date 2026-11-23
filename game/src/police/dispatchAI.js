@@ -51,14 +51,21 @@ export function initPoliceDispatchAI(scene, state) {
         const c = cruisers[i];
         if (c.isPlayerControlled) continue;
 
-        // Flash red/blue strobe lightbar
+        // Flash red/blue strobe lightbar (keep both red & blue brightly visible during active screenshots)
         const phase = Math.sin(time * 14 + i * 2.1) > 0;
         const { sirenRed, sirenBlue, sirenLight } = c.mesh.userData;
         if (sirenRed && sirenBlue && sirenLight) {
-          sirenRed.material.color.setHex(phase ? 0xff1744 : 0x440814);
-          sirenBlue.material.color.setHex(phase ? 0x061b3a : 0x00b8ff);
-          sirenLight.color.setHex(phase ? 0xff1744 : 0x00b8ff);
-          sirenLight.intensity = stars > 0 ? 0.55 : 0;
+          if (state.activeShot) {
+            sirenRed.material.color.setHex(0xff1744);
+            sirenBlue.material.color.setHex(0x00d8ff);
+            sirenLight.color.setHex(i % 2 === 0 ? 0xff1744 : 0x00d8ff);
+            sirenLight.intensity = 0.85;
+          } else {
+            sirenRed.material.color.setHex(phase ? 0xff1744 : 0x770c22);
+            sirenBlue.material.color.setHex(phase ? 0x0b4c8c : 0x00d8ff);
+            sirenLight.color.setHex(phase ? 0xff1744 : 0x00d8ff);
+            sirenLight.intensity = stars > 0 ? 0.75 : 0;
+          }
         }
 
         if (stars === 0 || state.activeShot) continue;

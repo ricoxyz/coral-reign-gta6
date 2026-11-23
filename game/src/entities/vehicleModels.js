@@ -12,19 +12,20 @@ export function buildSculptedVehicleMesh(archetype) {
 
   const paintMat = new THREE.MeshStandardMaterial({
     color: archetype.color,
-    roughness: 0.22,
-    metalness: 0.72,
+    emissive: archetype.cls === 'EXOTIC' ? 0x280600 : 0x000000,
+    roughness: 0.25,
+    metalness: 0.22,
   });
   const accentMat = new THREE.MeshStandardMaterial({
     color: archetype.accent,
-    roughness: 0.3,
-    metalness: 0.65,
+    roughness: 0.28,
+    metalness: 0.18,
   });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x0b1628,
-    emissive: 0x071a30,
+    emissive: 0x051020,
     roughness: 0.08,
-    metalness: 0.9,
+    metalness: 0.45,
   });
   const tireMat = new THREE.MeshStandardMaterial({ color: 0x11141a, roughness: 0.88 });
   const rimMat = new THREE.MeshStandardMaterial({ color: 0xdbe6ff, metalness: 0.9, roughness: 0.2 });
@@ -44,30 +45,49 @@ export function buildSculptedVehicleMesh(archetype) {
   hood.rotation.x = 0.15;
   root.add(hood);
 
-  // Police white doors livery or sports racing side trim
+  // Police high-contrast crisp white-and-navy patrol livery or sports racing side trim
   if (archetype.cls === 'POLICE') {
-    const whiteDoors = new THREE.Mesh(new THREE.BoxGeometry(W * 1.02, H * 0.38, L * 0.46), accentMat);
-    whiteDoors.position.set(0, H * 0.37, -L * 0.03);
+    const whiteDoors = new THREE.Mesh(new THREE.BoxGeometry(W * 1.03, H * 0.41, L * 0.52), accentMat);
+    whiteDoors.position.set(0, H * 0.37, -L * 0.02);
     root.add(whiteDoors);
+
+    // Crisp gold police shield stripe along white doors
+    const goldStripe = new THREE.Mesh(
+      new THREE.BoxGeometry(W * 1.04, 0.08, L * 0.50),
+      new THREE.MeshBasicMaterial({ color: 0xffc83b })
+    );
+    goldStripe.position.set(0, H * 0.41, -L * 0.02);
+    root.add(goldStripe);
 
     // Front steel pushbar bullbar
     const pushBar = new THREE.Mesh(
-      new THREE.BoxGeometry(W * 0.62, H * 0.28, 0.16),
-      new THREE.MeshStandardMaterial({ color: 0x2a3240, metalness: 0.85, roughness: 0.25 })
+      new THREE.BoxGeometry(W * 0.66, H * 0.32, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x1e2634, metalness: 0.5, roughness: 0.3 })
     );
-    pushBar.position.set(0, H * 0.34, L * 0.54);
+    pushBar.position.set(0, H * 0.35, L * 0.54);
     root.add(pushBar);
   } else {
-    const sideTrim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.03, H * 0.1, L * 0.86), accentMat);
+    const sideTrim = new THREE.Mesh(new THREE.BoxGeometry(W * 1.03, H * 0.11, L * 0.86), accentMat);
     sideTrim.position.set(0, H * 0.32, 0);
     root.add(sideTrim);
+
+    if (archetype.cls === 'EXOTIC') {
+      // Twin golden racing stripes on hood and roof so the Coral Vortex GT pops unmistakably
+      for (const rx of [-0.22, 0.22]) {
+        const hoodStripe = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, L * 0.36), accentMat);
+        hoodStripe.position.set(rx, H * 0.65, L * 0.28);
+        hoodStripe.rotation.x = 0.15;
+        root.add(hoodStripe);
+      }
+    }
   }
 
   // Sculpted cabin greenhouse with sloped front & fastback rear windshields
   const isHeavy = archetype.cls === 'HEAVY' || archetype.cls === 'SUV';
   const cabinLen = isHeavy ? L * 0.62 : L * 0.44;
   const cabinH = isHeavy ? H * 0.5 : H * 0.42;
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(W * 0.82, cabinH, cabinLen), paintMat);
+  const cabinRoofMat = archetype.cls === 'POLICE' ? accentMat : paintMat;
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(W * 0.82, cabinH, cabinLen), cabinRoofMat);
   cabin.position.set(0, H * 0.72, isHeavy ? -L * 0.08 : -L * 0.04);
   root.add(cabin);
 
@@ -146,31 +166,31 @@ export function buildSculptedVehicleMesh(archetype) {
     wheels.push(wGroup);
   }
 
-  // Police Cruiser Red/Blue Strobe Lightbar (crisp emissive glow, subtle non-glaring PointLight)
+  // Police Cruiser Bold Red/Blue Strobe Lightbar (oversized high-visibility roof beacon + glowing halo)
   let sirenRed = null;
   let sirenBlue = null;
   let sirenLight = null;
   if (archetype.cls === 'POLICE') {
-    const barBase = new THREE.Mesh(new THREE.BoxGeometry(W * 0.72, 0.11, 0.32), accentMat);
-    barBase.position.set(0, H * 0.98, -0.08);
+    const barBase = new THREE.Mesh(new THREE.BoxGeometry(W * 0.82, 0.13, 0.38), paintMat);
+    barBase.position.set(0, H * 0.98, -0.06);
     root.add(barBase);
 
     sirenRed = new THREE.Mesh(
-      new THREE.BoxGeometry(W * 0.32, 0.19, 0.28),
+      new THREE.BoxGeometry(W * 0.38, 0.25, 0.34),
       new THREE.MeshBasicMaterial({ color: 0xff1744 })
     );
-    sirenRed.position.set(-W * 0.18, H * 1.05, -0.08);
+    sirenRed.position.set(-W * 0.21, H * 1.08, -0.06);
     root.add(sirenRed);
 
     sirenBlue = new THREE.Mesh(
-      new THREE.BoxGeometry(W * 0.32, 0.19, 0.28),
-      new THREE.MeshBasicMaterial({ color: 0x00b0ff })
+      new THREE.BoxGeometry(W * 0.38, 0.25, 0.34),
+      new THREE.MeshBasicMaterial({ color: 0x00c8ff })
     );
-    sirenBlue.position.set(W * 0.18, H * 1.05, -0.08);
+    sirenBlue.position.set(W * 0.21, H * 1.08, -0.06);
     root.add(sirenBlue);
 
-    sirenLight = new THREE.PointLight(0xff1744, 0.55, 10);
-    sirenLight.position.set(0, H + 1.2, 0);
+    sirenLight = new THREE.PointLight(0xff1744, 0.8, 12);
+    sirenLight.position.set(0, H + 1.3, 0);
     root.add(sirenLight);
   }
 

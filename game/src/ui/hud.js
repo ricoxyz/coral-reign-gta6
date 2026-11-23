@@ -2,7 +2,9 @@
 import { WANTED_TIERS } from '../police/wantedSystem.js';
 import { RADIO_STATIONS } from '../audio/radio.js';
 import { renderMinimap } from './minimap.js';
-import { updateDialogueUI } from './dialogue.js';
+import { updateDialogueUI, renderCrewPortrait } from './dialogue.js';
+
+let crewPortraitsInitialized = false;
 
 export function updateHUD(state, weaponsSys, camera) {
   const uiLayer = document.getElementById('ui-layer');
@@ -84,15 +86,37 @@ export function updateHUD(state, weaponsSys, camera) {
   slotEls.forEach((el) => {
     const idx = Number(el.getAttribute('data-slot'));
     el.classList.toggle('active', idx === p.weaponIndex);
+    const magSpan = document.getElementById(`wep-mag-${idx}`);
+    if (magSpan && state.weapons && state.weapons[idx]) {
+      magSpan.textContent = String(state.weapons[idx].mag);
+    }
   });
+
+  if (!crewPortraitsInitialized) {
+    const avZ = document.getElementById('crew-avatar-z');
+    const avX = document.getElementById('crew-avatar-x');
+    const avC = document.getElementById('crew-avatar-c');
+    if (avZ && avX && avC) {
+      renderCrewPortrait(avZ, 2); // Valeria
+      renderCrewPortrait(avX, 1); // Rafa
+      renderCrewPortrait(avC, 3); // Mateo
+      crewPortraitsInitialized = true;
+    }
+  }
 
   const ab = state.crew.abilities;
   const zEl = document.getElementById('crew-z');
   const xEl = document.getElementById('crew-x');
   const cEl = document.getElementById('crew-c');
-  if (zEl) zEl.textContent = ab.swapPlates.cooldown > 0 ? `[Z] ${Math.ceil(ab.swapPlates.cooldown)}s` : '[Z] PLATES';
-  if (xEl) xEl.textContent = ab.fieldRepair.cooldown > 0 ? `[X] ${Math.ceil(ab.fieldRepair.cooldown)}s` : '[X] REPAIR';
-  if (cEl) cEl.textContent = ab.policeJammer.cooldown > 0 ? `[C] ${Math.ceil(ab.policeJammer.cooldown)}s` : '[C] JAMMER';
+  const cdZ = document.getElementById('crew-cd-z');
+  const cdX = document.getElementById('crew-cd-x');
+  const cdC = document.getElementById('crew-cd-c');
+  if (zEl) zEl.textContent = ab.swapPlates.cooldown > 0 ? `${Math.ceil(ab.swapPlates.cooldown)}s CD` : 'PLATES';
+  if (xEl) xEl.textContent = ab.fieldRepair.cooldown > 0 ? `${Math.ceil(ab.fieldRepair.cooldown)}s CD` : 'REPAIR';
+  if (cEl) cEl.textContent = ab.policeJammer.cooldown > 0 ? `${Math.ceil(ab.policeJammer.cooldown)}s CD` : 'JAMMER';
+  if (cdZ) cdZ.style.width = `${Math.max(0, 100 - (ab.swapPlates.cooldown / 12) * 100)}%`;
+  if (cdX) cdX.style.width = `${Math.max(0, 100 - (ab.fieldRepair.cooldown / 15) * 100)}%`;
+  if (cdC) cdC.style.width = `${Math.max(0, 100 - (ab.policeJammer.cooldown / 18) * 100)}%`;
 
   // Tactical Police Dispatch Feed
   const codeEl = document.getElementById('dispatch-code');

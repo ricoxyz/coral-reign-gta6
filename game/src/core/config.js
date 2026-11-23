@@ -14,29 +14,29 @@ export const WORLD_CONFIG = {
 };
 
 export const PALETTE = {
-  skyTop: 0x160f38,
-  skyMid: 0x992e62,
-  skyHorizon: 0xff7b42,
-  sunGlow: 0xffcf56,
-  oceanDeep: 0x062c4c,
-  oceanShallow: 0x00a8c8,
-  sandGold: 0xe6c187,
-  asphalt: 0x1e222d,
-  laneGold: 0xffbf3c,
-  neonPink: 0xff3b78,
-  neonCyan: 0x00f0ff,
-  neonAmber: 0xff9e2c,
-  policeRed: 0xff1e42,
-  policeBlue: 0x1e88ff,
+  skyTop: 0x3b86e6,
+  skyMid: 0xffa66b,
+  skyHorizon: 0xffe49e,
+  sunGlow: 0xfff5c0,
+  oceanDeep: 0x0082a8,
+  oceanShallow: 0x1ee3cf,
+  sandGold: 0xf7d794,
+  asphalt: 0x3c4352,
+  laneGold: 0xffc83b,
+  neonPink: 0xff4d79,
+  neonCyan: 0x00e5ff,
+  neonAmber: 0xff7e29,
+  policeRed: 0xff1744,
+  policeBlue: 0x00b0ff,
 };
 
 export const VEHICLE_ARCHETYPES = [
-  { id: 'vortex_gt', name: 'Coral Vortex GT', cls: 'EXOTIC', topSpeed: 162, accel: 38, handling: 3.4, color: 0xff3b78, accent: 0x00f0ff, length: 4.8, width: 2.15, height: 1.25 },
-  { id: 'solaris_rs', name: 'Solaris Aero RS', cls: 'SPORTS', topSpeed: 148, accel: 34, handling: 3.1, color: 0xffae19, accent: 0x151922, length: 4.6, width: 2.05, height: 1.32 },
-  { id: 'mirador_lux', name: 'Mirador Cabrio V8', cls: 'LUXURY', topSpeed: 132, accel: 28, handling: 2.8, color: 0x00d8f0, accent: 0xffffff, length: 4.9, width: 2.1, height: 1.38 },
-  { id: 'mercado_4x4', name: 'Mercado Titan 4x4', cls: 'SUV', topSpeed: 118, accel: 26, handling: 2.5, color: 0x32d885, accent: 0x11151c, length: 5.1, width: 2.3, height: 1.78 },
-  { id: 'bullion_van', name: 'Dorada Armored Transport', cls: 'HEAVY', topSpeed: 105, accel: 22, handling: 2.1, color: 0xd4af37, accent: 0x1b2230, length: 5.9, width: 2.45, height: 2.25 },
-  { id: 'palma_pd', name: 'Palma PD Interceptor', cls: 'POLICE', topSpeed: 154, accel: 36, handling: 3.3, color: 0x101828, accent: 0xffffff, length: 4.85, width: 2.12, height: 1.38 },
+  { id: 'vortex_gt', name: 'Coral Vortex GT', cls: 'EXOTIC', topSpeed: 162, accel: 38, handling: 3.4, color: 0xff3b14, accent: 0x161c28, length: 4.8, width: 2.18, height: 1.26 },
+  { id: 'solaris_rs', name: 'Solaris Aero RS', cls: 'SPORTS', topSpeed: 148, accel: 34, handling: 3.1, color: 0xffcc29, accent: 0x1e2430, length: 4.6, width: 2.05, height: 1.32 },
+  { id: 'mirador_lux', name: 'Mirador Cabrio V8', cls: 'LUXURY', topSpeed: 132, accel: 28, handling: 2.8, color: 0x19e6d8, accent: 0xffffff, length: 4.9, width: 2.1, height: 1.38 },
+  { id: 'mercado_4x4', name: 'Mercado Titan 4x4', cls: 'SUV', topSpeed: 118, accel: 26, handling: 2.5, color: 0xc8372d, accent: 0x1d222b, length: 5.1, width: 2.3, height: 1.78 },
+  { id: 'bullion_van', name: 'Dorada Armored Transport', cls: 'HEAVY', topSpeed: 105, accel: 22, handling: 2.1, color: 0xf5c542, accent: 0x222b3a, length: 5.9, width: 2.45, height: 2.25 },
+  { id: 'palma_pd', name: 'Palma PD Interceptor', cls: 'POLICE', topSpeed: 154, accel: 36, handling: 3.3, color: 0x0f2547, accent: 0xffffff, length: 4.85, width: 2.14, height: 1.38 },
 ];
 
 export function createSeededRng(seed = 101) {

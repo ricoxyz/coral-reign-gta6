@@ -45,7 +45,7 @@ function bootCoralReign() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x3a2042, 0.00135);
+  scene.fog = new THREE.FogExp2(0xffd6a8, 0.00075);
 
   const camera = new THREE.PerspectiveCamera(
     62,

@@ -1,13 +1,13 @@
-// Sculpted curved tropical palm trees, neon streetlamps, stunt ramps, yachts, & Palma Pier Ferris wheel
+// Sculpted curved tropical palm trees, beach umbrellas & loungers, streetlamps, stunt ramps, yachts, & Palma Pier Ferris wheel
 import { ROAD_Z } from './roads.js';
 
 export function createPalmTreeMesh(THREE, scale = 1) {
   const palm = new THREE.Group();
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7c5333, roughness: 0.85 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.78 });
   const frondMat = new THREE.MeshStandardMaterial({
-    color: 0x26b86f,
-    emissive: 0x09301b,
-    roughness: 0.45,
+    color: 0x38d864,
+    emissive: 0x10451c,
+    roughness: 0.38,
     side: THREE.DoubleSide,
   });
 
@@ -133,22 +133,60 @@ export function buildWorldProps(scene) {
   }
 
   // Luxury coastal yachts moored off Coral Marina & Solana Beach
-  const hullMat = new THREE.MeshStandardMaterial({ color: 0xf5f9ff, roughness: 0.2, metalness: 0.3 });
-  const deckMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  for (let y = 0; y < 6; y++) {
+  const hullMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.18, metalness: 0.2 });
+  const deckMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+  for (let y = 0; y < 8; y++) {
     const yacht = new THREE.Group();
-    const hull = new THREE.Mesh(new THREE.BoxGeometry(5.5, 2.2, 16), hullMat);
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(5.8, 2.3, 16.5), hullMat);
     hull.position.y = 0.9;
     yacht.add(hull);
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.0, 8.5), hullMat);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.1, 8.8), hullMat);
     cabin.position.set(0, 2.5, -1);
     yacht.add(cabin);
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.25, 8.8), deckMat);
-    trim.position.set(0, 3.55, -1);
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.3, 9.0), deckMat);
+    trim.position.set(0, 3.6, -1);
     yacht.add(trim);
-    yacht.position.set(310 + (y % 2) * 30, -0.1, -260 + y * 115);
-    yacht.rotation.y = 0.18 * (y - 2);
+    yacht.position.set(302 + (y % 2) * 26, -0.05, -280 + y * 92);
+    yacht.rotation.y = 0.15 * (y - 3);
     group.add(yacht);
+  }
+
+  // Colorful Beach Umbrellas & Sun Loungers along the golden-sand Solana Beach & Resort Pools
+  const umbrellaColors = [0xff4d79, 0x00d8d6, 0xffbe3d, 0xff7e29, 0x38d864];
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+  const loungerMat = new THREE.MeshStandardMaterial({ color: 0xfff8eb, roughness: 0.4 });
+
+  for (let bz = -360; bz <= 400; bz += 18) {
+    const uColor = umbrellaColors[Math.abs(Math.round(bz / 18)) % umbrellaColors.length];
+    const canopyMat = new THREE.MeshStandardMaterial({ color: uColor, roughness: 0.35 });
+
+    // Beachfront row (x = 246..266) + Resort pool row (x = 186)
+    const xCoords = [248 + ((Math.abs(bz) % 3) * 6), 262, 194];
+    for (let k = 0; k < xCoords.length; k++) {
+      const ux = xCoords[k];
+      const uz = bz + k * 4.5;
+      const umb = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.7, 6), poleMat);
+      pole.position.y = 1.35;
+      umb.add(pole);
+
+      const canopy = new THREE.Mesh(new THREE.ConeGeometry(2.3, 0.95, 8), canopyMat);
+      canopy.position.y = 2.65;
+      umb.add(canopy);
+
+      // Pair of beach loungers beside each umbrella
+      for (const lx of [-1.3, 1.3]) {
+        const lounger = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 2.2), loungerMat);
+        lounger.position.set(lx, 0.22, 0.3);
+        umb.add(lounger);
+        const towel = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.36, 1.5), canopyMat);
+        towel.position.set(lx, 0.24, 0.2);
+        umb.add(towel);
+      }
+
+      umb.position.set(ux, 0.05, uz);
+      group.add(umb);
+    }
   }
 
   // Palma Pier Wooden Boardwalk & Glowing Neon Ferris Wheel landmark

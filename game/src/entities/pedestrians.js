@@ -3,10 +3,11 @@ import { buildCharacterMesh } from './player.js';
 import { ROAD_X } from '../world/roads.js';
 
 export function initPedestriansAndEnemies(scene, state) {
+  const THREE = window.THREE;
   const pedestrians = [];
   const enemies = [];
 
-  const jacketColors = [0x00f0ff, 0xffbf3c, 0x4eff91, 0xff7e29, 0xb978ff, 0xff4d79];
+  const jacketColors = [0x00d8f0, 0xffbe3d, 0x38d864, 0xff6b35, 0xb978ff, 0xff4d79];
 
   // 28 Sidewalk Pedestrians across Solana Strip, Oceanfront & Downtown
   for (let i = 0; i < 28; i++) {
@@ -32,12 +33,13 @@ export function initPedestriansAndEnemies(scene, state) {
       rotY: dir === 1 ? 0 : Math.PI,
       speed: 2.2 + (i % 3) * 0.5,
       walkPhase: i * 0.7,
+      fleeing: false,
       hp: 100,
       mesh,
     });
   }
 
-  // 6 Rival Cartel & Tactical Combatants for On-Foot Crossfire
+  // 6 Rival Cartel & Tactical Combatants for On-Foot Crossfire with Red Tactical Target Chevrons
   const enemyConfigs = [
     { x: 104, z: 18, rotY: 0, jacket: 0xff2a55, role: 'CARTEL ENFORCER' },
     { x: 116, z: 14, rotY: -0.2, jacket: 0xff7e29, role: 'BULLION GUARD' },
@@ -46,6 +48,9 @@ export function initPedestriansAndEnemies(scene, state) {
     { x: 108, z: 3, rotY: 0, jacket: 0xff2a55, role: 'SYNDICATE HEAVY' },
     { x: 114, z: -2, rotY: -0.15, jacket: 0x14223b, role: 'TACTICAL LEAD' },
   ];
+
+  const chevronMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
+  const chevronBorderMat = new THREE.MeshBasicMaterial({ color: 0xffe066 });
 
   for (let i = 0; i < enemyConfigs.length; i++) {
     const ec = enemyConfigs[i];
@@ -56,6 +61,19 @@ export function initPedestriansAndEnemies(scene, state) {
       visor: 0xff2a55,
     });
     mesh.userData.rightArm.rotation.x = -Math.PI * 0.46;
+
+    // Floating Red Tactical Target Chevron above hostile enforcer head
+    const chevronGroup = new THREE.Group();
+    chevronGroup.position.set(0, 2.28, 0);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.38, 4), chevronMat);
+    cone.rotation.x = Math.PI;
+    chevronGroup.add(cone);
+    const ring = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.06, 0.08), chevronBorderMat);
+    ring.position.y = 0.20;
+    chevronGroup.add(ring);
+    mesh.add(chevronGroup);
+    mesh.userData.targetChevron = chevronGroup;
+
     scene.add(mesh);
 
     enemies.push({
@@ -87,9 +105,20 @@ export function initPedestriansAndEnemies(scene, state) {
           if (ped.z < -340) ped.z = 340;
           ped.walkPhase += dt * 6;
         }
-        const swing = Math.sin(ped.walkPhase) * 0.38;
+        const swing = Math.sin(ped.walkPhase) * 0.45;
         ped.mesh.userData.leftLeg.rotation.x = swing;
         ped.mesh.userData.rightLeg.rotation.x = -swing;
+        if (ped.fleeing || state.wanted.stars >= 2) {
+          // Fleeing pedestrians raise both arms in panic!
+          ped.mesh.userData.leftArm.rotation.z = 2.55;
+          ped.mesh.userData.leftArm.position.y = 1.48;
+          ped.mesh.userData.rightArm.rotation.z = -2.55;
+          ped.mesh.userData.rightArm.rotation.x = 0.2;
+        } else {
+          ped.mesh.userData.leftArm.rotation.z = 0;
+          ped.mesh.userData.leftArm.position.y = 1.16;
+          ped.mesh.userData.rightArm.rotation.z = 0;
+        }
         ped.mesh.position.set(ped.x, ped.y, ped.z);
         ped.mesh.rotation.y = ped.rotY;
       }
@@ -101,6 +130,10 @@ export function initPedestriansAndEnemies(scene, state) {
           continue;
         }
         en.mesh.visible = true;
+        if (en.mesh.userData.targetChevron) {
+          en.mesh.userData.targetChevron.visible = !en.downed;
+          en.mesh.userData.targetChevron.rotation.y += dt * 2.5;
+        }
         if (en.downed) {
           // Downed pose flat on asphalt
           en.mesh.position.set(en.x, 0.22, en.z);

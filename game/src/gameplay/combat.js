@@ -31,21 +31,27 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
   }
 
   function spawnExplosion(x, y, z, scale = 1.0) {
-    // Multi-puff 3D fire, smoke, and spark cluster (no flat 2D rings)
+    // Dramatic roaring 3D orange-gold explosion fireball + dark rising smoke plume + flying embers
     const holder = new THREE.Group();
     holder.position.set(x, y, z);
 
+    // Brilliant white-gold core
     const flashCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.45 * scale, 10, 10),
-      new THREE.MeshBasicMaterial({ color: 0xfff8b8 })
+      new THREE.SphereGeometry(0.62 * scale, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xfffac2 })
     );
+    flashCore.position.y = 0.25 * scale;
     holder.add(flashCore);
 
+    // Roaring orange-gold fireball billows & dark rising smoke plume
     const puffOffsets = [
-      { ox: 0.25, oy: 0.2, oz: 0.1, r: 0.65, c: 0xff8c24, op: 0.85 },
-      { ox: -0.35, oy: 0.35, oz: -0.2, r: 0.55, c: 0xff5518, op: 0.78 },
-      { ox: 0.15, oy: 0.75, oz: -0.15, r: 0.7, c: 0x262936, op: 0.68 },
-      { ox: -0.2, oy: 0.95, oz: 0.25, r: 0.62, c: 0x1d202b, op: 0.62 },
+      { ox: 0.0, oy: 0.35, oz: 0.0, r: 0.92, c: 0xffa619, op: 0.94 },
+      { ox: 0.38, oy: 0.28, oz: 0.16, r: 0.76, c: 0xff6214, op: 0.92 },
+      { ox: -0.42, oy: 0.42, oz: -0.22, r: 0.72, c: 0xff3b14, op: 0.90 },
+      { ox: 0.18, oy: 0.78, oz: 0.22, r: 0.68, c: 0xffb82e, op: 0.88 },
+      { ox: -0.18, oy: 1.15, oz: -0.15, r: 0.85, c: 0x262934, op: 0.82 },
+      { ox: 0.26, oy: 1.65, oz: -0.10, r: 0.98, c: 0x1d2029, op: 0.76 },
+      { ox: -0.24, oy: 2.20, oz: 0.18, r: 1.12, c: 0x161820, op: 0.68 },
     ];
     for (let i = 0; i < puffOffsets.length; i++) {
       const p = puffOffsets[i];
@@ -57,20 +63,30 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
       holder.add(puff);
     }
 
+    // Scorched ground crater blast ring
+    const scorch = new THREE.Mesh(
+      new THREE.CircleGeometry(1.4 * scale, 16),
+      new THREE.MeshBasicMaterial({ color: 0x181a22, transparent: true, opacity: 0.65, depthWrite: false })
+    );
+    scorch.rotation.x = -Math.PI / 2;
+    scorch.position.y = -y + 0.07;
+    holder.add(scorch);
+
     // Flying ember sparks
-    for (let s = 0; s < 6; s++) {
-      const ang = (s / 6) * Math.PI * 2;
+    for (let s = 0; s < 10; s++) {
+      const ang = (s / 10) * Math.PI * 2;
       const spark = new THREE.Mesh(
-        new THREE.BoxGeometry(0.06, 0.06, 0.38 * scale),
-        new THREE.MeshBasicMaterial({ color: 0xffdf55 })
+        new THREE.BoxGeometry(0.08 * scale, 0.08 * scale, 0.52 * scale),
+        new THREE.MeshBasicMaterial({ color: s % 2 === 0 ? 0xffe45e : 0xff6214 })
       );
-      spark.position.set(Math.cos(ang) * 0.8 * scale, 0.25 + (s % 2) * 0.3, Math.sin(ang) * 0.8 * scale);
+      spark.position.set(Math.cos(ang) * 1.15 * scale, (0.35 + (s % 3) * 0.4) * scale, Math.sin(ang) * 1.15 * scale);
       spark.rotation.y = -ang;
+      spark.rotation.x = 0.35;
       holder.add(spark);
     }
 
     fxGroup.add(holder);
-    explosions.push({ mesh: holder, ttl: 0.75 });
+    explosions.push({ mesh: holder, ttl: 0.85 });
   }
 
   function spawnDriftEffects(x, z, rotY) {
