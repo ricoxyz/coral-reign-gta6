@@ -1,82 +1,78 @@
-// Articulated multi-limb 3D humanoid characters (Player Dani Vega, crew, syndicate enforcers, pedestrians)
+// Articulated 3D humanoid characters (Dani Vega, crew, syndicate enforcers, pedestrians)
 export function buildCharacterMesh(options = {}) {
- const THREE = window.THREE;
- const Std = (c, r = 0.5, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
- const group = new THREE.Group();
- const skinMat = Std(options.skin || 0xd99b72, 0.55);
- const jacketMat = Std(options.jacket || 0xff3b78, 0.34, 0.22);
- const lapelMat = Std(options.lapel || 0x1a2236, 0.4, 0.3);
- const shirtMat = Std(options.shirt || 0x00f0ff, 0.45);
- const pantsMat = Std(options.pants || 0x182238, 0.65);
- const shoeMat = Std(options.shoe || 0x0f1218, 0.75);
- const hairMat = Std(options.hair || 0x181322, 0.75);
- const gunMat = Std(0x1e2533, 0.22, 0.85);
- const gunAccentMat = Std(0xffbf3c, 0.25, 0.8);
+ const THREE = window.THREE, group = new THREE.Group();
+ const Std = (c, r = .5, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
+ const Bas = (p) => new THREE.MeshBasicMaterial(p);
+ const skinMat = Std(options.skin || 0xd99b72, .55), jacketMat = Std(options.jacket || 0xff3b78, .34, .22), lapelMat = Std(options.lapel || 0x1a2236, .4, .3);
+ const shirtMat = Std(options.shirt || 0x00f0ff, .45), pantsMat = Std(options.pants || 0x182238, .65), shoeMat = Std(options.shoe || 0x0f1218, .75);
+ const hairMat = Std(options.hair || 0x181322, .75), gunMat = Std(0x1e2533, .22, .85), gunAccentMat = Std(0xffbf3c, .25, .8);
 
- const P = (parent, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); parent.add(m); return m; };
- const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
- const Cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
+ const P = (par, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); par.add(m); return m; };
+ const G = (geo, mat, x, y, z) => P(group, geo, mat, x, y, z);
+ const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s), Sph = (r, w = 10, h = 10) => new THREE.SphereGeometry(r, w, h);
 
- const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 14), new THREE.MeshBasicMaterial({ color: 0x050810, transparent: true, opacity: 0.5, depthWrite: false }));
- shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06; group.add(shadow);
+ G(new THREE.CircleGeometry(.5, 14), Bas({ color: 0x050810, transparent: true, opacity: .5, depthWrite: false }), 0, .06, 0).rotation.x = -Math.PI / 2;
+ G(Box(.42, .16, .26), pantsMat, 0, .82, 0);
+ G(Cyl(.28, .22, .66, 12), jacketMat, 0, 1.2, 0).scale.set(1.18, 1, .68);
+ for (const sx of [-.28, .28]) {
+  G(Sph(.115), jacketMat, sx, 1.46, 0);
+  G(Box(.13, .03, .12), lapelMat, sx * .82, 1.52, -.02);
+ }
+ G(Cyl(.17, .205, .11), lapelMat, 0, 1.53, 0).scale.set(1.1, 1, .85);
+ G(Box(.16, .56, .1), shirtMat, 0, 1.21, .12);
+ for (const lx of [-.1, .1]) G(Box(.05, .52, .11), lapelMat, lx, 1.22, .125).rotation.z = -lx * .4;
+ G(Box(.42, .03, .03), lapelMat, 0, 1.41, -.165);
+ G(Box(.026, .48, .025), lapelMat, 0, 1.16, -.155);
+ G(Cyl(.23, .235, .075, 12), lapelMat, 0, .89, 0).scale.set(1.17, 1, .72);
+ G(Box(.08, .06, .04), gunAccentMat, 0, .89, .165);
 
- P(group, Box(0.42, 0.16, 0.26), pantsMat, 0, 0.82, 0);
- P(group, Box(0.12, 0.08, 0.28), gunAccentMat, 0, 0.82, 0);
- P(group, Cyl(0.28, 0.22, 0.66, 12), jacketMat, 0, 1.2, 0).scale.set(1.18, 1, 0.68);
- for (const sx of [-0.28, 0.28]) P(group, new THREE.SphereGeometry(0.115, 10, 10), jacketMat, sx, 1.46, 0);
- P(group, Cyl(0.18, 0.21, 0.11), lapelMat, 0, 1.53, 0).scale.set(1.1, 1, 0.85);
- P(group, Box(0.17, 0.62, 0.34), shirtMat, 0, 1.2, 0);
- for (const lx of [-0.11, 0.11]) P(group, Box(0.05, 0.56, 0.36), lapelMat, lx, 1.21, 0).rotation.z = -lx * 0.45;
-
- P(group, Cyl(0.08, 0.095, 0.14), skinMat, 0, 1.58, 0);
- P(group, new THREE.SphereGeometry(0.185, 14, 14), skinMat, 0, 1.74, 0).scale.set(0.95, 1.06, 0.98);
- P(group, new THREE.SphereGeometry(0.198, 14, 12), hairMat, 0, 1.79, -0.02).scale.set(0.98, 0.92, 1.04);
- P(group, Box(0.24, 0.09, 0.28), hairMat, 0, 1.91, 0.02).rotation.x = -0.15;
- P(group, Box(0.28, 0.068, 0.12), new THREE.MeshBasicMaterial({ color: options.visor || 0x00f0ff }), 0, 1.75, 0.15);
+ G(Cyl(.08, .095, .14), skinMat, 0, 1.58, 0);
+ G(Sph(.185, 14, 14), skinMat, 0, 1.74, 0).scale.set(.95, 1.06, .98);
+ G(Sph(.198, 14, 12), hairMat, 0, 1.79, -.02).scale.set(.98, .92, 1.04);
+ G(Box(.24, .09, .28), hairMat, 0, 1.91, .02).rotation.x = -.15;
+ G(Box(.28, .068, .12), Bas({ color: options.visor || 0x00f0ff }), 0, 1.75, .15);
 
  const makeLeg = (s) => {
-  const leg = new THREE.Group(); leg.position.set(s * 0.14, 0.78, 0);
-  P(leg, Cyl(0.098, 0.084, 0.38), pantsMat, 0, -0.18, 0);
-  P(leg, new THREE.SphereGeometry(0.082, 8, 8), lapelMat, 0, -0.37, 0.02);
-  P(leg, Cyl(0.082, 0.068, 0.36), pantsMat, 0, -0.54, -0.02);
-  P(leg, Box(0.16, 0.11, 0.27), shoeMat, 0, -0.72, 0.04);
-  P(leg, Box(0.17, 0.03, 0.28), shirtMat, 0, -0.76, 0.04);
+  const leg = new THREE.Group(); leg.position.set(s * .14, .78, 0);
+  P(leg, Cyl(.098, .084, .38), pantsMat, 0, -.18, 0);
+  P(leg, Sph(.082, 8, 8), lapelMat, 0, -.37, .02);
+  P(leg, Cyl(.082, .068, .36), pantsMat, 0, -.54, -.02);
+  P(leg, Box(.16, .11, .27), shoeMat, 0, -.72, .04);
+  P(leg, Box(.17, .03, .28), shirtMat, 0, -.76, .04);
   return leg;
  };
  const leftLeg = makeLeg(-1), rightLeg = makeLeg(1);
  group.add(leftLeg, rightLeg);
 
- const leftArm = new THREE.Group(); leftArm.position.set(-0.31, 1.44, 0);
- P(leftArm, Cyl(0.078, 0.068, 0.3), jacketMat, 0, -0.14, 0);
- P(leftArm, Cyl(0.066, 0.056, 0.28), skinMat, 0.06, -0.32, 0.14).rotation.set(-0.85, 0, -0.35);
+ const leftArm = new THREE.Group(); leftArm.position.set(-.31, 1.44, 0);
+ P(leftArm, Cyl(.078, .068, .3), jacketMat, 0, -.14, 0);
+ P(leftArm, Cyl(.066, .056, .28), skinMat, .06, -.32, .14).rotation.set(-.85, 0, -.35);
  group.add(leftArm);
 
- const rightArm = new THREE.Group(); rightArm.position.set(0.31, 1.44, 0);
- P(rightArm, Cyl(0.078, 0.068, 0.3), jacketMat, 0, -0.14, 0);
- P(rightArm, Cyl(0.066, 0.056, 0.28), skinMat, -0.04, -0.34, 0.1).rotation.x = -0.35;
+ const rightArm = new THREE.Group(); rightArm.position.set(.31, 1.44, 0);
+ P(rightArm, Cyl(.078, .068, .3), jacketMat, 0, -.14, 0);
+ P(rightArm, Cyl(.066, .056, .28), skinMat, -.04, -.34, .1).rotation.x = -.35;
 
- const gunMesh = new THREE.Group(); gunMesh.position.set(-0.08, -0.46, 0.14); gunMesh.rotation.x = Math.PI * 0.45;
- P(gunMesh, Box(0.075, 0.13, 0.46), gunMat, 0, 0, 0);
- P(gunMesh, Cyl(0.024, 0.024, 0.38, 8), gunMat, 0, 0.02, 0.38).rotation.x = Math.PI / 2;
- P(gunMesh, Box(0.065, 0.085, 0.24), gunAccentMat, 0, 0.015, 0.28);
- P(gunMesh, Box(0.055, 0.2, 0.085), gunMat, 0, -0.14, 0.08).rotation.x = 0.22;
- P(gunMesh, Box(0.065, 0.11, 0.22), lapelMat, 0, -0.02, -0.28);
- P(gunMesh, Cyl(0.028, 0.028, 0.16, 8), gunAccentMat, 0, 0.095, 0.02).rotation.x = Math.PI / 2;
+ const gunMesh = new THREE.Group(); gunMesh.position.set(-.08, -.46, .14); gunMesh.rotation.x = Math.PI * .45;
+ P(gunMesh, Box(.075, .13, .46), gunMat, 0, 0, 0);
+ P(gunMesh, Cyl(.024, .024, .38, 8), gunMat, 0, .02, .38).rotation.x = Math.PI / 2;
+ P(gunMesh, Box(.065, .085, .24), gunAccentMat, 0, .015, .28);
+ P(gunMesh, Box(.055, .2, .085), gunMat, 0, -.14, .08).rotation.x = .22;
+ P(gunMesh, Box(.065, .11, .22), lapelMat, 0, -.02, -.28);
+ P(gunMesh, Cyl(.028, .028, .16, 8), gunAccentMat, 0, .095, .02).rotation.x = Math.PI / 2;
 
- const muzzleFlash = new THREE.Group(); muzzleFlash.position.set(0, 0.02, 0.6);
- const flashMat = new THREE.MeshBasicMaterial({ color: 0xff9f24, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
- const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.94, blending: THREE.AdditiveBlending, depthWrite: false });
- P(muzzleFlash, new THREE.SphereGeometry(0.065, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfff5cc }), 0, 0, 0);
- P(muzzleFlash, new THREE.SphereGeometry(0.16, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff7b1c, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false }), 0, 0, 0.04);
- P(muzzleFlash, new THREE.ConeGeometry(0.08, 0.32, 7), flashMat, 0, 0, 0.16).rotation.x = Math.PI / 2;
+ const muzzleFlash = new THREE.Group(); muzzleFlash.position.set(0, .02, .6);
+ const flashMat = Bas({ color: 0xff9f24, transparent: true, opacity: .88, blending: THREE.AdditiveBlending, depthWrite: false });
+ const sparkMat = Bas({ color: 0xffe066, transparent: true, opacity: .94, blending: THREE.AdditiveBlending, depthWrite: false });
+ P(muzzleFlash, Sph(.065, 8, 8), Bas({ color: 0xfff5cc }), 0, 0, 0);
+ P(muzzleFlash, Sph(.16, 10, 8), Bas({ color: 0xff7b1c, transparent: true, opacity: .34, blending: THREE.AdditiveBlending, depthWrite: false }), 0, 0, .04);
+ P(muzzleFlash, new THREE.ConeGeometry(.08, .32, 7), flashMat, 0, 0, .16).rotation.x = Math.PI / 2;
  for (let sp = 0; sp < 6; sp++) {
-  const ang = (sp / 6) * Math.PI * 2 + 0.35;
-  const ray = P(muzzleFlash, new THREE.ConeGeometry(0.026, 0.19 + (sp % 2) * 0.07, 5), sp % 2 === 0 ? sparkMat : flashMat, Math.cos(ang) * 0.08, Math.sin(ang) * 0.08, 0.03);
-  ray.rotation.z = ang - Math.PI / 2;
+  const ang = (sp / 6) * Math.PI * 2 + .35;
+  P(muzzleFlash, new THREE.ConeGeometry(.026, .19 + (sp % 2) * .07, 5), sp % 2 === 0 ? sparkMat : flashMat, Math.cos(ang) * .08, Math.sin(ang) * .08, .03).rotation.z = ang - Math.PI / 2;
  }
  muzzleFlash.visible = false;
- gunMesh.add(muzzleFlash);
- rightArm.add(gunMesh); group.add(rightArm);
+ gunMesh.add(muzzleFlash); rightArm.add(gunMesh); group.add(rightArm);
  group.userData = { leftLeg, rightLeg, leftArm, rightArm, muzzleFlash, gunMesh };
  return group;
 }
@@ -84,38 +80,29 @@ export function buildCharacterMesh(options = {}) {
 export function initPlayerEntity(scene, state) {
  const mesh = buildCharacterMesh({ jacket: 0xff3b78, lapel: 0x162038, shirt: 0x00f0ff, pants: 0x162038, visor: 0x00f0ff });
  scene.add(mesh);
-
  return {
   mesh,
   update(dt, colliders) {
    const p = state.player;
    if (p.inVehicle) { mesh.visible = false; return; }
    mesh.visible = true;
-
-   const k = state.input.keys;
-   const moveZ = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0);
-   const moveX = (k.KeyA || k.ArrowLeft ? 1 : 0) - (k.KeyD || k.ArrowRight ? 1 : 0);
+   const k = state.input.keys, mz = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0), mx = (k.KeyA || k.ArrowLeft ? 1 : 0) - (k.KeyD || k.ArrowRight ? 1 : 0);
    const sprint = Boolean(k.ShiftLeft || k.ShiftRight || k.Space), speed = sprint ? 11.5 : 7.2;
-
-   if (moveZ !== 0 || moveX !== 0) {
-    p.rotY = Math.atan2(moveX, moveZ) + state.input.cameraYaw;
+   if (mz !== 0 || mx !== 0) {
+    p.rotY = Math.atan2(mx, mz) + state.input.cameraYaw;
     const nx = p.x + Math.sin(p.rotY) * speed * dt, nz = p.z + Math.cos(p.rotY) * speed * dt;
-    if (!colliders.some((c) => nx > c.minX - 0.8 && nx < c.maxX + 0.8 && nz > c.minZ - 0.8 && nz < c.maxZ + 0.8)) { p.x = nx; p.z = nz; }
+    if (!colliders.some((c) => nx > c.minX - .8 && nx < c.maxX + .8 && nz > c.minZ - .8 && nz < c.maxZ + .8)) { p.x = nx; p.z = nz; }
     p.walkCycle += dt * (sprint ? 14 : 9);
    }
-
-   const { leftLeg, rightLeg, leftArm, rightArm, muzzleFlash } = mesh.userData;
-   const sw = Math.sin(p.walkCycle) * 0.45;
+   const { leftLeg, rightLeg, leftArm, rightArm, muzzleFlash } = mesh.userData, sw = Math.sin(p.walkCycle) * .45;
    if (p.aiming || p.muzzleTimer > 0) {
-    leftLeg.rotation.x = 0.24; rightLeg.rotation.x = -0.26;
-    rightArm.rotation.x = -Math.PI * 0.45; leftArm.rotation.set(-Math.PI * 0.36, 0.32, 0);
+    leftLeg.rotation.x = .24; rightLeg.rotation.x = -.26;
+    rightArm.rotation.x = -Math.PI * .45; leftArm.rotation.set(-Math.PI * .36, .32, 0);
    } else {
     leftLeg.rotation.x = sw; rightLeg.rotation.x = -sw;
-    leftArm.rotation.set(-sw * 0.6, 0, 0); rightArm.rotation.x = sw * 0.5;
+    leftArm.rotation.set(-sw * .6, 0, 0); rightArm.rotation.x = sw * .5;
    }
-   if (p.muzzleTimer > 0) { if (!state.activeShot) p.muzzleTimer -= dt; muzzleFlash.visible = true; }
-   else muzzleFlash.visible = false;
-
+   if (p.muzzleTimer > 0) { if (!state.activeShot) p.muzzleTimer -= dt; muzzleFlash.visible = true; } else muzzleFlash.visible = false;
    mesh.position.set(p.x, p.y, p.z); mesh.rotation.y = p.rotY;
   },
  };

@@ -1,4 +1,4 @@
-// 10 Multi-Stage Story Missions in Palma Dorada with Crew Dialogue & Waypoint Tracking
+// 10 Multi-Stage Story Missions in Palma Dorada with Crew Dialogue & Waypoints
 const M = (id, num, title, district, medal, rewardCash, rewardRespect, x, z, stages) => ({
  id, num, title, district, medal, rewardCash, rewardRespect, waypoint: { x, z }, stages,
 });
@@ -17,50 +17,34 @@ export const STORY_MISSIONS = [
 ];
 
 export function initMissionSystem(scene, state, soundEngine) {
- const THREE = window.THREE;
- const beaconGroup = new THREE.Group();
- const ring = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.25, 10, 28), new THREE.MeshBasicMaterial({ color: 0xffbf3c }));
- ring.rotation.x = Math.PI / 2; ring.position.y = 0.25;
- const pillar = new THREE.Mesh(
-  new THREE.CylinderGeometry(3.8, 3.8, 18, 20, 1, true),
-  new THREE.MeshBasicMaterial({ color: 0xff4d79, transparent: true, opacity: 0.24, side: THREE.DoubleSide, depthWrite: false })
- );
- pillar.position.y = 9;
- beaconGroup.add(ring, pillar);
- scene.add(beaconGroup);
+ const THREE = window.THREE, bg = new THREE.Group();
+ const ring = new THREE.Mesh(new THREE.TorusGeometry(4.2, .25, 10, 28), new THREE.MeshBasicMaterial({ color: 0xffbf3c }));
+ ring.rotation.x = Math.PI / 2; ring.position.y = .25;
+ const pil = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 3.8, 18, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xff4d79, transparent: true, opacity: .24, side: THREE.DoubleSide, depthWrite: false }));
+ pil.position.y = 9; bg.add(ring, pil); scene.add(bg);
 
  function syncActiveMission() {
   const m = STORY_MISSIONS[state.mission.currentIndex] || STORY_MISSIONS[6];
-  Object.assign(state.mission, {
-   title: m.title, rewardCash: m.rewardCash, rewardRespect: m.rewardRespect,
-   totalStages: m.stages.length, objective: m.stages[state.mission.stageIndex] || m.stages[0], waypoint: { ...m.waypoint },
-  });
-  beaconGroup.position.set(m.waypoint.x, 0, m.waypoint.z);
+  Object.assign(state.mission, { title: m.title, rewardCash: m.rewardCash, rewardRespect: m.rewardRespect, totalStages: m.stages.length, objective: m.stages[state.mission.stageIndex] || m.stages[0], waypoint: { ...m.waypoint } });
+  bg.position.set(m.waypoint.x, 0, m.waypoint.z);
  }
  syncActiveMission();
 
  return {
-  beaconGroup, syncActiveMission,
+  beaconGroup: bg, syncActiveMission,
   update(dt, time) {
    ring.rotation.z = time * 2;
-   const wp = state.mission.waypoint;
-   const dist = Math.round(Math.hypot(wp.x - state.player.x, wp.z - state.player.z));
+   const wp = state.mission.waypoint, dist = Math.round(Math.hypot(wp.x - state.player.x, wp.z - state.player.z));
    state.mission.distance = dist;
    if (dist < 10 && !state.activeShot) {
     const m = STORY_MISSIONS[state.mission.currentIndex];
     if (++state.mission.stageIndex >= m.stages.length) {
-     m.medal = 'G';
-     state.player.cash += m.rewardCash; state.player.respect += m.rewardRespect;
-     state.stats.netWorth += m.rewardCash;
-     state.stats.completionPct = Math.min(100, state.stats.completionPct + 8);
+     m.medal = 'G'; state.player.cash += m.rewardCash; state.player.respect += m.rewardRespect;
+     state.stats.netWorth += m.rewardCash; state.stats.completionPct = Math.min(100, state.stats.completionPct + 8);
      state.mission.currentIndex = (state.mission.currentIndex + 1) % STORY_MISSIONS.length;
-     state.mission.stageIndex = 0;
-     STORY_MISSIONS[state.mission.currentIndex].medal = 'ACTIVE';
-    } else {
-     m.waypoint.z = m.waypoint.z > 0 ? -180 : 160;
-    }
-    syncActiveMission();
-    if (soundEngine) soundEngine.playChime(960);
+     state.mission.stageIndex = 0; STORY_MISSIONS[state.mission.currentIndex].medal = 'ACTIVE';
+    } else m.waypoint.z = m.waypoint.z > 0 ? -180 : 160;
+    syncActiveMission(); soundEngine?.playChime(960);
    }
   },
  };

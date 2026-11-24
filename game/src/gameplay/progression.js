@@ -1,73 +1,52 @@
-// Complete Syndicate Career Rank Ladder, District Territory Control, Perks & Completion Calculator
+// Syndicate Career Rank Ladder, District Territory Control, Mastery & Completion Calculator
 export const SYNDICATE_RANKS = [
-  { rank: 1, title: 'STREET RUNNER', minRespect: 0, heatDecayBonus: 1.0, payoutMultiplier: 1.0, perk: 'Basic Street Contacts' },
-  { rank: 5, title: 'HARBOR ENFORCER', minRespect: 2500, heatDecayBonus: 1.15, payoutMultiplier: 1.1, perk: 'Marina Smuggler Stashes' },
-  { rank: 10, title: 'MARINA CAPO', minRespect: 7500, heatDecayBonus: 1.3, payoutMultiplier: 1.25, perk: 'Tactical Armor Resupply' },
-  { rank: 14, title: 'PALMA KINGPIN', minRespect: 13500, heatDecayBonus: 1.5, payoutMultiplier: 1.45, perk: 'Syndicate Chopper Transponder' },
-  { rank: 18, title: 'CARTEL SOVEREIGN', minRespect: 22000, heatDecayBonus: 1.75, payoutMultiplier: 1.7, perk: 'High-Roller Casino Vault Key' },
-  { rank: 20, title: 'CORAL EMPEROR', minRespect: 32000, heatDecayBonus: 2.0, payoutMultiplier: 2.0, perk: 'Total Palma Dorada Immunity' },
-];
+ [1, 'STREET RUNNER', 0, 1, 1, 'Basic Street Contacts'],
+ [5, 'HARBOR ENFORCER', 2500, 1.15, 1.1, 'Marina Smuggler Stashes'],
+ [10, 'MARINA CAPO', 7500, 1.3, 1.25, 'Tactical Armor Resupply'],
+ [14, 'PALMA KINGPIN', 13500, 1.5, 1.45, 'Syndicate Chopper Transponder'],
+ [18, 'CARTEL SOVEREIGN', 22000, 1.75, 1.7, 'High-Roller Casino Vault Key'],
+ [20, 'CORAL EMPEROR', 32000, 2, 2, 'Total Palma Dorada Immunity'],
+].map(([rank, title, minRespect, heatDecayBonus, payoutMultiplier, perk]) => ({ rank, title, minRespect, heatDecayBonus, payoutMultiplier, perk }));
 
 export const DISTRICT_CONTROL_DEFAULTS = [
-  { id: 'solana_strip', name: 'SOLANA STRIP', controlPct: 82, turfBoss: 'Valeria Cruz', incomePerHour: 14500 },
-  { id: 'coral_marina', name: 'CORAL MARINA', controlPct: 74, turfBoss: 'Rafa Mendoza', incomePerHour: 12000 },
-  { id: 'vidrio_downtown', name: 'VIDRIO DOWNTOWN', controlPct: 65, turfBoss: 'Mateo Silva', incomePerHour: 18500 },
-  { id: 'mercado_viejo', name: 'MERCADO VIEJO', controlPct: 58, turfBoss: 'Elena Vargas', incomePerHour: 9500 },
-  { id: 'palma_pier', name: 'PALMA PIER', controlPct: 79, turfBoss: 'Ramona Diaz', incomePerHour: 11200 },
-  { id: 'mirador_heights', name: 'MIRADOR HEIGHTS', controlPct: 52, turfBoss: 'Don Aurelio', incomePerHour: 16800 },
-];
+ ['solana_strip', 'SOLANA STRIP', 82, 'Valeria Cruz', 14500],
+ ['coral_marina', 'CORAL MARINA', 74, 'Rafa Mendoza', 12000],
+ ['vidrio_downtown', 'VIDRIO DOWNTOWN', 65, 'Mateo Silva', 18500],
+ ['mercado_viejo', 'MERCADO VIEJO', 58, 'Elena Vargas', 9500],
+ ['palma_pier', 'PALMA PIER', 79, 'Ramona Diaz', 11200],
+ ['mirador_heights', 'MIRADOR HEIGHTS', 52, 'Don Aurelio', 16800],
+].map(([id, name, controlPct, turfBoss, incomePerHour]) => ({ id, name, controlPct, turfBoss, incomePerHour }));
 
 export const WEAPON_MASTERY_TIERS = [
-  { tier: 1, label: 'ROOKIE', minKills: 0, spreadModifier: 1.0, reloadSpeedBonus: 1.0 },
-  { tier: 2, label: 'OPERATIVE', minKills: 15, spreadModifier: 0.88, reloadSpeedBonus: 1.12 },
-  { tier: 3, label: 'SHARPSHOOTER', minKills: 40, spreadModifier: 0.75, reloadSpeedBonus: 1.25 },
-  { tier: 4, label: 'SYNDICATE ACE', minKills: 80, spreadModifier: 0.62, reloadSpeedBonus: 1.4 },
-];
+ [1, 'ROOKIE', 0, 1, 1], [2, 'OPERATIVE', 15, .88, 1.12], [3, 'SHARPSHOOTER', 40, .75, 1.25], [4, 'SYNDICATE ACE', 80, .62, 1.4],
+].map(([tier, label, minKills, spreadModifier, reloadSpeedBonus]) => ({ tier, label, minKills, spreadModifier, reloadSpeedBonus }));
 
-export function calculateCampaignCompletion(stats) {
-  if (!stats) return 68.4;
-  const missionShare = (stats.missionsDone / Math.max(1, stats.missionsTotal)) * 45;
-  const raceShare = (stats.racesWon / Math.max(1, stats.racesTotal)) * 15;
-  const stuntShare = (stats.stuntsCompleted / Math.max(1, stats.stuntsTotal)) * 15;
-  const shellShare = (stats.shellsCollected / Math.max(1, stats.shellsTotal)) * 15;
-  const crewShare = ((stats.crewCount || 3) / Math.max(1, stats.crewTotal || 3)) * 10;
-  return Number((missionShare + raceShare + stuntShare + shellShare + crewShare).toFixed(1));
+export function calculateCampaignCompletion(st) {
+ if (!st) return 68.4;
+ const m = (st.missionsDone / Math.max(1, st.missionsTotal)) * 45, r = (st.racesWon / Math.max(1, st.racesTotal)) * 15;
+ const s = (st.stuntsCompleted / Math.max(1, st.stuntsTotal)) * 15, sh = (st.shellsCollected / Math.max(1, st.shellsTotal)) * 15;
+ const c = ((st.crewCount || 3) / Math.max(1, st.crewTotal || 3)) * 10;
+ return Number((m + r + s + sh + c).toFixed(1));
 }
 
 export function getDistrictControlSummary(state) {
-  if (!state.districtControl) {
-    state.districtControl = DISTRICT_CONTROL_DEFAULTS.map((d) => ({ ...d }));
-  }
-  let totalPct = 0;
-  let totalHourlyIncome = 0;
-  for (let i = 0; i < state.districtControl.length; i++) {
-    totalPct += state.districtControl[i].controlPct;
-    totalHourlyIncome += state.districtControl[i].incomePerHour;
-  }
-  return {
-    averageControlPct: Math.round(totalPct / state.districtControl.length),
-    totalHourlyIncome,
-    districts: state.districtControl,
-  };
+ if (!state.districtControl) state.districtControl = DISTRICT_CONTROL_DEFAULTS.map((d) => ({ ...d }));
+ let totalPct = 0, totalHourlyIncome = 0;
+ for (const d of state.districtControl) { totalPct += d.controlPct; totalHourlyIncome += d.incomePerHour; }
+ return { averageControlPct: Math.round(totalPct / state.districtControl.length), totalHourlyIncome, districts: state.districtControl };
 }
 
 export function updateProgression(state) {
-  const r = state.player.respect;
-  let current = SYNDICATE_RANKS[0];
-  let nextRank = SYNDICATE_RANKS[SYNDICATE_RANKS.length - 1];
-
-  for (let i = 0; i < SYNDICATE_RANKS.length; i++) {
-    if (r >= SYNDICATE_RANKS[i].minRespect) {
-      current = SYNDICATE_RANKS[i];
-      nextRank = SYNDICATE_RANKS[Math.min(i + 1, SYNDICATE_RANKS.length - 1)];
-    }
-  }
-
-  state.player.rank = Math.max(14, current.rank);
-  state.player.rankTitle = current.rank >= 14 ? 'KINGPIN' : current.title;
-  state.player.heatDecayBonus = current.heatDecayBonus;
-  state.player.payoutMultiplier = current.payoutMultiplier;
-  state.player.nextRankRespect = nextRank.minRespect;
-  state.stats.completionPct = calculateCampaignCompletion(state.stats);
-  getDistrictControlSummary(state);
+ const r = state.player.respect;
+ let cur = SYNDICATE_RANKS[0], nxt = SYNDICATE_RANKS[SYNDICATE_RANKS.length - 1];
+ for (let i = 0; i < SYNDICATE_RANKS.length; i++) if (r >= SYNDICATE_RANKS[i].minRespect) {
+  cur = SYNDICATE_RANKS[i]; nxt = SYNDICATE_RANKS[Math.min(i + 1, SYNDICATE_RANKS.length - 1)];
+ }
+ state.player.rank = Math.max(14, cur.rank);
+ state.player.rankTitle = cur.rank >= 14 ? 'KINGPIN' : cur.title;
+ state.player.heatDecayBonus = cur.heatDecayBonus;
+ state.player.payoutMultiplier = cur.payoutMultiplier;
+ state.player.nextRankRespect = nxt.minRespect;
+ state.stats.completionPct = calculateCampaignCompletion(state.stats);
+ getDistrictControlSummary(state);
 }
