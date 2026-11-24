@@ -18,7 +18,7 @@ export function createGameState(seed = 101) {
    abilities: { swapPlates: { key: 'Z', label: 'PLATES', cooldown: 0, maxCooldown: 18 }, fieldRepair: { key: 'X', label: 'REPAIR', cooldown: 0, maxCooldown: 22 }, policeJammer: { key: 'C', label: 'JAMMER', cooldown: 0, maxCooldown: 30 } },
   },
   mission: {
-   currentIndex: 6, stageIndex: 2, totalStages: 4, title: 'SOLANA GOLD CONVOY', objective: 'Break the TAC-9 barricade & reach Coral Marina',
+   currentIndex: 6, stageIndex: 2, totalStages: 4, title: 'SOLANA GOLD CONVOY', objective: 'Break TAC-9 barricade & reach Coral Marina',
    rewardCash: 45000, rewardRespect: 1200, waypoint: { x: 110, z: -165 }, distance: 180,
   },
   dialogue: { speaker: 'VALERIA · TACTICAL LEAD', line: '"Chopper spotlight is locked on us, Dani! Cut east past Solana Pier to shake TAC-9!"', portraitSeed: 2, timer: 12 },

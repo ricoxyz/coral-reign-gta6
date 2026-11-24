@@ -37,17 +37,17 @@ export function initPoliceHelicopter(scene, state) {
  addPart(Cyl(.2, .24, .45), dark, 0, 1.72, .1);
  const Add = (p) => Bas({ ...p, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
  const mR = new THREE.Group(); mR.position.set(0, 1.94, .1);
- const blur = new THREE.Mesh(new THREE.CircleGeometry(5.3, 32), Bas({ map: mkTex((c) => rad(c, [[0, 'rgba(180,225,255,.16)'], [.7, 'rgba(150,210,255,.12)'], [.94, 'rgba(210,240,255,.22)'], [1, 'rgba(180,220,255,0)']])), transparent: true, opacity: .34, side: THREE.DoubleSide, depthWrite: false }));
+ const blur = new THREE.Mesh(new THREE.CircleGeometry(5.3, 32), Bas({ map: mkTex((c) => rad(c, [[0, '#b4e1ff29'], [.7, '#96d2ff1f'], [.94, '#d2f0ff38'], [1, '#b4dcff00']])), transparent: true, opacity: .34, side: THREE.DoubleSide, depthWrite: false }));
  blur.rotation.x = -Math.PI / 2; mR.add(new THREE.Mesh(Box(11.8, .05, .32), rotorM), new THREE.Mesh(Box(.32, .05, 11.8), rotorM), blur); heli.add(mR);
  addPart(Sph(.28), dark, 0, -.82, 2.25); addPart(Sph(.24), Bas({ color: 0xeaffff }), 0, -.94, 2.38);
  addPart(Sph(.45), Add({ color: 0x9ef4ff, opacity: .55 }), 0, -.96, 2.42);
  addPart(Sph(.14, 8, 8), Bas({ color: 0xff1744 }), -1.12, -.45, .8); addPart(Sph(.14, 8, 8), Bas({ color: 0x00e5ff }), 1.12, -.45, .8);
  const coneTex = mkTex((c) => {
   const vg = c.createLinearGradient(0, 0, 0, 128);
-  [[0, 'rgba(245,254,255,1)'], [.38, 'rgba(205,248,255,.92)'], [.8, 'rgba(145,230,255,.58)'], [1, 'rgba(110,215,255,.08)']].forEach(([s, col]) => vg.addColorStop(s, col));
+  [[0, '#f5feff'], [.38, '#cdf8ffeb'], [.8, '#91e6ff94'], [1, '#6ed7ff14']].forEach(([s, col]) => vg.addColorStop(s, col));
   c.fillStyle = vg; c.fillRect(0, 0, 128, 128); c.globalCompositeOperation = 'destination-in';
   const hg = c.createLinearGradient(0, 0, 128, 0);
-  [[0, 'rgba(255,255,255,.2)'], [.28, 'rgba(255,255,255,.92)'], [.5, '#fff'], [.72, 'rgba(255,255,255,.92)'], [1, 'rgba(255,255,255,.2)']].forEach(([s, col]) => hg.addColorStop(s, col));
+  [[0, '#ffffff33'], [.28, '#ffffffeb'], [.5, '#fff'], [.72, '#ffffffeb'], [1, '#ffffff33']].forEach(([s, col]) => hg.addColorStop(s, col));
   c.fillStyle = hg; c.fillRect(0, 0, 128, 128);
  });
  const cGeo = (rt, rb, seg) => { const g = new THREE.CylinderGeometry(rt, rb, 1, seg, 1, true); g.translate(0, -.5, 0); g.rotateX(-Math.PI / 2); return g; };
@@ -55,7 +55,7 @@ export function initPoliceHelicopter(scene, state) {
  const spotlightCone = new THREE.Mesh(cGeo(.26, 4.4, 28), cMat(.19));
  spotlightCone.add(new THREE.Mesh(cGeo(.14, 2.1, 22), cMat(.22)), new THREE.Mesh(cGeo(.07, 1, 16), cMat(.16)));
  scene.add(spotlightCone);
- const groundPool = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), Add({ map: mkTex((c) => rad(c, [[0, 'rgba(245,254,255,.72)'], [.35, 'rgba(150,236,255,.38)'], [.72, 'rgba(100,215,255,.12)'], [1, 'rgba(100,215,255,0)']])) }));
+ const groundPool = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), Add({ map: mkTex((c) => rad(c, [[0, '#f5feffb8'], [.35, '#96ecff61'], [.72, '#64d7ff1f'], [1, '#64d7ff00']])) }));
  groundPool.rotation.x = -Math.PI / 2; groundPool.position.set(110, .14, 36); scene.add(groundPool); heli.position.set(104, 24, 12); scene.add(heli);
  function alignSpotlightToPool() {
   heli.updateMatrixWorld(true);

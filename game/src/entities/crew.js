@@ -2,7 +2,7 @@
 import { buildCharacterMesh } from './player.js';
 
 export function initCrewSystem(scene, state, events, soundEngine) {
- const partnerMesh = buildCharacterMesh({ jacket: 0x00d8d6, lapel: 0x0c2438, shirt: 0xff4d79, pants: 0x141d30, visor: 0xffbf3c, hair: 0x20152a, hairStyle: 'ponytail' });
+ const partnerMesh = buildCharacterMesh({ jacket: 0x00e5e5, lapel: 0x102c44, shirt: 0xff4d79, pants: 0x18233a, visor: 0xffbf3c, hair: 0x352242, hairStyle: 'ponytail' });
  const u = partnerMesh.userData;
  u.rightArm.rotation.set(-Math.PI * .45, -.08, 0); u.leftArm.rotation.set(-Math.PI * .38, .36, 0);
  u.leftLeg.rotation.x = -.22; u.rightLeg.rotation.x = .24; u.muzzleFlash.visible = true;
@@ -36,7 +36,7 @@ export function initCrewSystem(scene, state, events, soundEngine) {
     partnerMesh.visible = true;
     const p = state.player, s = Math.sin(p.rotY), c = Math.cos(p.rotY);
     if (state.activeShot === 'combat') {
-     partnerMesh.position.set(213.8, -.14, 368.6); partnerMesh.rotation.y = Math.PI - .22;
+     partnerMesh.position.set(214.2, -.1, 368.8); partnerMesh.rotation.y = Math.PI - .34;
      u.leftLeg.rotation.x = -.62; u.rightLeg.rotation.x = .68; u.muzzleFlash.visible = true;
     } else {
      partnerMesh.position.set(p.x + s * 1.8 + c * 2.1, 0, p.z + c * 1.8 - s * 2.1); partnerMesh.rotation.y = p.rotY + .04;

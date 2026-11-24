@@ -41,7 +41,7 @@
 </div>
 <div id="hud-bottom-left">
 <div class="district-header"><span id="hud-district"></span><span id="hud-map-hint">[M] MAP</span></div>
-<canvas id="minimap-canvas" width="224" height="138"></canvas>
+<canvas id="minimap-canvas" width="196" height="112"></canvas>
 <div class="vitals-bars">
 <div class="vital-track"><div id="hud-health-fill"></div></div>
 <div class="vital-track"><div id="hud-armor-fill"></div></div>
@@ -52,7 +52,7 @@
 <div id="hud-bottom-center">
 <div id="context-prompt"><span class="key-badge">F</span><span id="prompt-text"></span></div>
 <div id="dialogue-bar">
-<canvas id="dialogue-avatar" width="44" height="44"></canvas>
+<canvas id="dialogue-avatar" width="32" height="32"></canvas>
 <div class="dialogue-content"><div id="dialogue-speaker"></div><div id="dialogue-line"></div></div>
 </div>
 </div>
@@ -88,18 +88,21 @@
 <div id="title-screen-modal">
 <div class="title-main">
 <div class="title-left">
+<div class="title-eyebrow">OPEN-WORLD CRIME EPIC · 6 DISTRICTS</div>
 <div><h1 class="title-logo">CORAL REIGN</h1><div class="title-sub">PALMA DORADA</div></div>
 <div class="title-desc" id="title-hero-desc"></div>
 <div class="title-actions">
 <button class="title-btn" id="btn-continue-career"></button>
-<button class="title-btn secondary" id="btn-new-career"></button>
+<div class="title-btn-row">
 <button class="title-btn secondary" id="btn-load-game"></button>
+<button class="title-btn secondary" id="btn-new-career"></button>
+</div>
 <button class="title-btn secondary" id="btn-open-world-freeroam"></button>
 </div>
+<div class="title-footer-legend" id="title-controls-strip"></div>
 </div>
 <div class="title-right"><div class="title-panel"><h3>CAREER SAVE SLOTS</h3><div class="save-slots-grid" id="title-save-slots"></div></div></div>
 </div>
-<div class="title-footer-legend" id="title-controls-strip"></div>
 </div>
 <script src="./vendor/three.min.js"></script>
 <script type="module" src="./src/main.js"></script>

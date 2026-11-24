@@ -3,7 +3,6 @@ import { WORLD_CONFIG } from '../core/config.js';
 
 const mkTex = (THREE, w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d')); return new THREE.CanvasTexture(c); };
 const linGrad = (ctx, x1, y1, x2, y2, stops) => { const g = ctx.createLinearGradient(x1, y1, x2, y2); stops.forEach(([s, c]) => g.addColorStop(s, c)); return g; };
-const rg = (c, a) => `rgba(${c},${a})`;
 
 function buildSkyTex(THREE, stops, stars, cloudN, cloudY, cloudStop) {
  return mkTex(THREE, 1024, 512, (ctx) => {
@@ -22,24 +21,29 @@ function buildSkyTex(THREE, stops, stars, cloudN, cloudY, cloudStop) {
 
 function buildNightMarketPlaza(THREE) {
  const nm = new THREE.Group(), Std = (p) => new THREE.MeshStandardMaterial(p), Bas = (p) => new THREE.MeshBasicMaterial(p);
- const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s);
+ const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (rt, rb, h, s = 6) => new THREE.CylinderGeometry(rt, rb, h, s), Pln = (w, h) => new THREE.PlaneGeometry(w, h), HPI = Math.PI / 2;
  const addM = (p, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); p.add(m); return m; };
  const tileTex = mkTex(THREE, 256, 256, (c) => {
-  c.fillStyle = '#241e33'; c.fillRect(0, 0, 256, 256);
+  c.fillStyle = '#2d2340'; c.fillRect(0, 0, 256, 256);
   for (let y = 0; y < 256; y += 32) for (let x = 0; x < 256; x += 32) {
-   c.fillStyle = (x / 32 + y / 32) % 2 === 0 ? '#332842' : '#292238'; c.fillRect(x + 2, y + 2, 28, 28);
-   c.fillStyle = 'rgba(255,190,120,.08)'; c.fillRect(x + 4, y + 4, 24, 3);
+   c.fillStyle = (x / 32 + y / 32) % 2 === 0 ? '#3b2f52' : '#312645'; c.fillRect(x + 2, y + 2, 28, 28);
+   c.fillStyle = '#ffc8821f'; c.fillRect(x + 4, y + 4, 24, 3);
   }
  });
  tileTex.wrapS = tileTex.wrapT = THREE.RepeatWrapping; tileTex.repeat.set(5, 7);
- addM(nm, new THREE.PlaneGeometry(34, 48), Std({ map: tileTex, roughness: .52, metalness: .14 }), 220, .09, 364).rotation.x = -Math.PI / 2;
- for (const [bx, col] of [[204.2, 0xff4d79], [235.8, 0x00e5ff]]) addM(nm, new THREE.PlaneGeometry(.42, 46), Bas({ color: col }), bx, .1, 364).rotation.x = -Math.PI / 2;
+ addM(nm, Pln(60, 64), Std({ color: 0x262e45, roughness: .72, metalness: .1 }), 220, .055, 362).rotation.x = -HPI;
+ addM(nm, Pln(34, 48), Std({ map: tileTex, roughness: .48, metalness: .16 }), 220, .09, 364).rotation.x = -HPI;
+ for (const [bx, col] of [[204.2, 0xff5588], [235.8, 0x00f0ff]]) addM(nm, Pln(.55, 46), Bas({ color: col }), bx, .105, 364).rotation.x = -HPI;
+ for (const bz of [348, 358, 368]) for (const [bx, col] of [[205.5, 0xffe07a], [234.5, 0x00f0ff]]) {
+  addM(nm, Cyl(.14, .16, 1.35, 8), Std({ color: 0x1d2538, metalness: .7 }), bx, .68, bz);
+  addM(nm, new THREE.SphereGeometry(.22, 8, 8), Bas({ color: col }), bx, 1.44, bz);
+ }
  [
-  [204.8, 353, Math.PI / 2, 0xff4d79, 'MERCADO NOCTURNO', '#240b2c', '#00f0ff'],
-  [204.8, 365, Math.PI / 2, 0xff9f1c, 'PALMA TACOS', '#2b120c', '#ffd166'],
-  [204.8, 375, Math.PI / 2, 0x00d8d6, 'NEON BAZAAR', '#092238', '#ff4d79'],
-  [235.2, 354, -Math.PI / 2, 0xb978ff, 'ARCADE 88', '#1b0d33', '#00e5ff'],
-  [235.2, 363, -Math.PI / 2, 0xff5e7e, 'CAFE SOLANA', '#2a0f22', '#ffbf3c'],
+  [204.8, 353, HPI, 0xff4d79, 'MERCADO NOCTURNO', '#240b2c', '#00f0ff'],
+  [204.8, 365, HPI, 0xff9f1c, 'PALMA TACOS', '#2b120c', '#ffd166'],
+  [204.8, 375, HPI, 0x00d8d6, 'NEON BAZAAR', '#092238', '#ff4d79'],
+  [235.2, 354, -HPI, 0xb978ff, 'ARCADE 88', '#1b0d33', '#00e5ff'],
+  [235.2, 363, -HPI, 0xff5e7e, 'CAFE SOLANA', '#2a0f22', '#ffbf3c'],
  ].forEach(([sx, sz, rotY, canCol, title, bg, border]) => {
   const st = new THREE.Group(); st.position.set(sx, 0, sz); st.rotation.y = rotY;
   addM(st, Box(7.2, 1.05, 3.2), Std({ color: 0x261e38, roughness: .6 }), 0, .52, 0);
@@ -57,32 +61,32 @@ function buildNightMarketPlaza(THREE) {
   addM(nm, Cyl(.03, .03, 30, 5), cabM, 220, 5.65, lz).rotation.z = Math.PI / 2;
   for (let b = 0; b <= 12; b++) { const t = b / 12; addM(nm, new THREE.SphereGeometry(.16, 8, 8), (b + ri) % 2 === 0 ? bulbA : bulbB, 205.5 + t * 29, 5.55 - Math.sin(t * Math.PI) * .75, lz); }
  });
- for (const [col, int, x, y, z] of [[0xff9b3d, 1.45, 218, 6.2, 362], [0xff3b78, .95, 208, 4.8, 358], [0x00e5ff, .85, 232, 4.8, 356]]) {
-  const pl = new THREE.PointLight(col, int, 36); pl.position.set(x, y, z); nm.add(pl);
+ for (const [col, int, x, y, z] of [[0xffa842, 1.45, 218, 6.4, 364], [0xff4d88, 1.05, 208, 4.8, 358], [0x00e5ff, 1.05, 232, 4.8, 356]]) {
+  const pl = new THREE.PointLight(col, int, 38); pl.position.set(x, y, z); nm.add(pl);
  }
  nm.visible = false; return nm;
 }
 
 export function buildOceanAndSky(scene) {
- const THREE = window.THREE, group = new THREE.Group();
+ const THREE = window.THREE, group = new THREE.Group(), Pln = (w, h, ws = 1, hs = 1) => new THREE.PlaneGeometry(w, h, ws, hs);
  const sunsetTex = buildSkyTex(THREE, [[0, '#103568'], [.28, '#164E8A'], [.4, '#2B83B8'], [.44, '#d97a46'], [.47, '#F59E42'], [.51, '#E85D56'], [.56, '#c84b62'], [1, '#1c4f78']], 0, 42, 195, (cy) => [
-  [0, rg('255,212,148', cy < 228 ? .52 : .62)], [.5, rg('235,134,108', cy < 228 ? .36 : .45)], [1, rg('72,65,115', 0)]
+  [0, cy < 228 ? '#ffd49485' : '#ffd4949e'], [.5, cy < 228 ? '#eb866c5c' : '#eb866c73'], [1, '#48417300']
  ]);
- const twilightTex = buildSkyTex(THREE, [[0, '#0a071c'], [.22, '#1a1236'], [.38, '#29174d'], [.46, '#4f245e'], [.51, '#9c3b62'], [.56, '#401b4f'], [1, '#0e0b24']], 90, 26, 208, () => [[0, rg('195,88,125', .28)], [1, rg('30,18,62', 0)]]);
+ const twilightTex = buildSkyTex(THREE, [[0, '#142d6b'], [.2, '#244b8f'], [.34, '#4e5499'], [.43, '#cc6a6b'], [.48, '#ff9f4d'], [.52, '#ffd67a'], [.57, '#ff7d52'], [1, '#263f70']], 40, 32, 202, () => [[0, '#ffdca570'], [.55, '#ff947647'], [1, '#55447d00']]);
  const Bas = (p) => new THREE.MeshBasicMaterial(p), Std = (p) => new THREE.MeshStandardMaterial(p);
  const skyMat = Bas({ map: sunsetTex, side: THREE.BackSide, depthWrite: false, fog: false });
  group.add(new THREE.Mesh(new THREE.SphereGeometry(1450, 40, 28), skyMat));
 
  const sunTex = mkTex(THREE, 256, 256, (c) => {
   const g = c.createRadialGradient(128, 128, 10, 128, 128, 124);
-  [[0, rg('255,252,225', .98)], [.18, rg('255,218,115', .92)], [.42, rg('245,158,66', .52)], [.72, rg('232,93,86', .18)], [1, rg('232,93,86', 0)]].forEach(([s, col]) => g.addColorStop(s, col));
+  [[0, '#fffce1fa'], [.18, '#ffda73eb'], [.42, '#f59e4285'], [.72, '#e85d562e'], [1, '#e85d5600']].forEach(([s, col]) => g.addColorStop(s, col));
   c.fillStyle = g; c.fillRect(0, 0, 256, 256);
  });
- const sunGlow = new THREE.Mesh(new THREE.PlaneGeometry(135, 135), Bas({ map: sunTex, transparent: true, depthWrite: false, fog: false }));
+ const sunGlow = new THREE.Mesh(Pln(135, 135), Bas({ map: sunTex, transparent: true, depthWrite: false, fog: false }));
  sunGlow.position.set(-165, 178, -520); sunGlow.lookAt(110, 12, 40); group.add(sunGlow);
 
  const addPlane = (w, h, mat, x, y, z, ws = 1, hs = 1) => {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h, ws, hs), mat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); group.add(m); return m;
+  const m = new THREE.Mesh(Pln(w, h, ws, hs), mat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); group.add(m); return m;
  };
  addPlane(2400, 2400, Std({ color: 0x6c7382, roughness: .85, metalness: .05 }), 0, -.06, 0);
  addPlane(WORLD_CONFIG.beachWidth + 24, 2200, Std({ color: 0xf4e3be, roughness: .78, metalness: .04 }), WORLD_CONFIG.oceanX - WORLD_CONFIG.beachWidth * .45, .03, 0, 8, 32);
@@ -97,16 +101,17 @@ export function buildOceanAndSky(scene) {
  const nightMarketGroup = buildNightMarketPlaza(THREE);
  group.add(amb, hemi, sunL, fillL, nightMarketGroup); scene.add(group);
 
+ const setH = (o, a, b) => { o.color.setHex(a); o.intensity = b; };
  function setAtmosphere(mode = 'sunset') {
   const tw = mode === 'twilight';
   skyMat.map = tw ? twilightTex : sunsetTex; skyMat.needsUpdate = true;
-  sunGlow.visible = !tw; nightMarketGroup.visible = tw;
-  if (scene.fog) { scene.fog.color.setHex(tw ? 0x1a1236 : 0xe89b6c); scene.fog.density = tw ? .00055 : .00038; }
-  amb.color.setHex(tw ? 0x4a4382 : 0xffdfc2); amb.intensity = tw ? .52 : .34;
-  hemi.color.setHex(tw ? 0x644ca8 : 0xffc994); hemi.groundColor.setHex(tw ? 0x18132e : 0x2c5278); hemi.intensity = tw ? .62 : .68;
-  sunL.color.setHex(tw ? 0x9b8cff : 0xffa952); sunL.intensity = tw ? .42 : .98;
-  fillL.color.setHex(tw ? 0xff7d47 : 0x52b8e8); fillL.intensity = tw ? .72 : .42;
-  waterMat.color.setHex(tw ? 0x00496e : 0x0085b2); waterMat.emissive.setHex(tw ? 0x051c38 : 0x033856);
+  sunGlow.visible = true; nightMarketGroup.visible = tw;
+  if (scene.fog) { scene.fog.color.setHex(tw ? 0xc87a6a : 0xe89b6c); scene.fog.density = tw ? .00032 : .00038; }
+  setH(amb, tw ? 0xffe0c2 : 0xffdfc2, tw ? .48 : .34);
+  setH(hemi, tw ? 0xffc699 : 0xffc994, tw ? .66 : .68); hemi.groundColor.setHex(tw ? 0x3b4d78 : 0x2c5278);
+  setH(sunL, tw ? 0xffb866 : 0xffa952, tw ? .86 : .98);
+  setH(fillL, tw ? 0x64dcff : 0x52b8e8, tw ? .58 : .42);
+  waterMat.color.setHex(tw ? 0x006d99 : 0x0085b2); waterMat.emissive.setHex(tw ? 0x062d4d : 0x033856);
  }
 
  return {

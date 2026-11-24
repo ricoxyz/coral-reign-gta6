@@ -1,88 +1,93 @@
 /* CORAL REIGN — HUD Styles */
-#crosshair{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);width:28px;height:28px;border:2px solid var(--cyan);border-radius:50%;box-shadow:0 0 12px var(--coral)}
+#crosshair{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);width:26px;height:26px;border:2px solid var(--cyan);border-radius:50%;box-shadow:0 0 12px var(--coral)}
 #crosshair.hidden{display:none}
 #crosshair::before,#crosshair::after{content:'';position:absolute;background:var(--coral)}
 #crosshair::before{left:50%;top:-6px;bottom:-6px;width:2px;transform:translateX(-50%)}
 #crosshair::after{top:50%;left:-6px;right:-6px;height:2px;transform:translateY(-50%)}
-#world-hijack-badge{position:absolute;display:none;transform:translate(-50%,-100%);background:rgba(14,20,38,.96);border:2px solid var(--gold);border-radius:22px;padding:5px 13px;font-size:12px;color:#fff;white-space:nowrap}
-#world-hijack-badge.visible{display:flex;align-items:center;gap:6px}
-.enemy-tag{position:absolute;transform:translate(-50%,-100%);background:rgba(12,18,32,.92);border:1.5px solid #ff2a55;border-radius:5px;padding:2px 7px;white-space:nowrap;font-size:9.5px;color:#ffe066}
-.enemy-hp{width:100%;height:3.5px;background:rgba(255,255,255,.18);border-radius:2px;margin-top:2px;overflow:hidden}
+#world-hijack-badge{position:absolute;display:none;transform:translate(-50%,-100%);background:#0e1426f0;border:2px solid var(--gold);border-radius:20px;padding:4px 11px;font-size:11px;color:#fff;white-space:nowrap}
+#world-hijack-badge.visible,#hud-bottom-center,#dialogue-bar{display:flex;align-items:center}
+#world-hijack-badge.visible{gap:6px}
+.enemy-tag{position:absolute;transform:translate(-50%,-100%);background:#0c1220eb;border:1.5px solid #ff2a55;border-radius:5px;padding:2px 7px;white-space:nowrap;font-size:9.5px;color:#ffe066}
+.enemy-hp,.xp-bar-wrap,.crew-cd-track,.vital-track,.rpm-track{width:100%;background:#ffffff24;border-radius:3px;overflow:hidden}
+.enemy-hp{height:3.5px;margin-top:2px}
 .enemy-hp div{height:100%;background:linear-gradient(90deg,#ff1744,#ff7e29)}
-#hud-top-left,#hud-top-right{position:absolute;top:14px;width:312px;display:flex;flex-direction:column;gap:7px}
-#hud-top-left{left:16px}
-#hud-top-right{right:16px}
-#mission-card{border-left:4px solid var(--coral);border-color:rgba(255,191,60,.52)}
-.mission-head,.mission-obj-row,.dispatch-header,.cash-row,.wanted-row,.rank-row,.weapon-header,.wep-meta,.district-header,.vitals-labels,.speed-row,.veh-meta,.radio-row{display:flex;justify-content:space-between;align-items:center}
+#hud-top-left,#hud-top-right{position:absolute;top:10px;display:flex;flex-direction:column;gap:5px;width:254px}
+#hud-top-left{left:12px}
+#hud-top-right{right:12px}
+#mission-card{border-left:3.5px solid var(--coral);border-color:#ffbf3c85}
+.mission-head,.mission-obj-row,.dispatch-header,.cash-row,.wanted-row,.rank-row,.weapon-header,.district-header,.vitals-labels,.speed-row,.veh-meta,.radio-row{display:flex;justify-content:space-between;align-items:center}
 .mission-head,.rank-row,#hud-district,.unit-dist,#hud-weapon-ammo{color:var(--gold)}
-.mission-head,.rank-row,.dispatch-header,.radio-row{font-size:10px}
+.mission-head,.rank-row,.dispatch-header,.radio-row{font-size:9.5px}
 #hud-mission-reward,.crew-skill,#hud-vehicle-class,#hud-cash{color:var(--green)}
-.mission-stage-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0 6px}
-.stage-seg{height:4px;border-radius:2px;background:rgba(255,255,255,.16)}
+.mission-stage-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin:3px 0 4px}
+.stage-seg{height:3px;border-radius:2px;background:#ffffff29}
 .stage-seg.done,.crew-cd-fill{background:var(--green)}
 .stage-seg.active{background:var(--gold)}
 .mission-title,#hud-weapon-name,#hud-vehicle-name,.unit-tag,.crew-name,#hud-speed{color:#fff}
-.mission-title{font-size:14.5px}
-.mission-obj-row{gap:8px;margin-top:3px;font-size:11.5px;font-weight:700;color:var(--cyan)}
-.dist-pill{background:rgba(255,191,60,.18);border:1px solid var(--gold);color:var(--gold);font-size:10.5px;padding:1px 6px;border-radius:4px}
-#dispatch-panel{border-left:4px solid #ff2a55}
-.dispatch-header{color:var(--coral);margin-bottom:5px}
-.dispatch-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff2a55;margin-right:5px}
-#dispatch-list{list-style:none;margin:0;padding:0;font-size:10.5px;font-weight:800;line-height:1.45}
-#dispatch-list li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.07);padding:2px 0}
-.tactic-pill{font-size:9px;padding:1px 6px;border-radius:4px}
-.tactic-pill.crimson{background:rgba(255,23,68,.25);border:1px solid #ff2a55;color:#ff8da3}
-.tactic-pill.amber{background:rgba(255,191,60,.22);border:1px solid #ffbf3c;color:#ffe07d}
-.tactic-pill.cyan{background:rgba(0,240,255,.2);border:1px solid #00f0ff;color:#8cf8ff}
-.tactic-pill.purple{background:rgba(185,120,255,.24);border:1px solid #b978ff;color:#e2c4ff}
-#hud-cash{font-size:21px}
-.clock-badge{font-size:11px;color:var(--cyan);background:rgba(0,240,255,.12);border:1px solid var(--border);padding:2px 7px;border-radius:4px}
-.wanted-row,.rank-row{margin-top:5px}
-.wanted-label{font-size:11px;color:#fff;background:linear-gradient(135deg,#ff1744,#ff6b35);border:1px solid #ffe066;padding:2px 8px;border-radius:5px}
-#hud-stars{font-size:20px;letter-spacing:2px;line-height:1}
+.mission-title,.crew-name,.crew-skill,#hud-mission-obj,#context-prompt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission-title{font-size:12.5px;line-height:1.15}
+.mission-obj-row{gap:6px;margin-top:2px;font-size:9.5px;font-weight:700;color:var(--cyan)}
+#hud-mission-obj,.crew-info,.dialogue-content{flex:1;min-width:0}
+.dist-pill,.clock-badge,.wanted-label,#hud-gear,.wep-slot{border-radius:4px}
+.dist-pill,.wep-svg,.crew-avatar,#dialogue-avatar{flex-shrink:0}
+.dist-pill{background:#ffbf3c2e;border:1px solid var(--gold);color:var(--gold);font-size:9.5px;padding:0 5px}
+#dispatch-panel{border-left:3.5px solid #ff2a55;padding:5px 9px}
+.dispatch-header{color:var(--coral);margin-bottom:2px;font-size:9px}
+.dispatch-live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff2a55;margin-right:4px}
+#dispatch-list{list-style:none;margin:0;padding:0;font-size:9.5px;font-weight:800;line-height:1.22}
+#dispatch-list li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:5px;border-bottom:1px solid #ffffff12;padding:1.5px 0}
+#dispatch-list li:last-child{border-bottom:none}
+.tactic-pill{font-size:8.5px;padding:0 5px;border-radius:3px}
+.tactic-pill.crimson{background:#ff174440;border:1px solid #ff2a55;color:#ff8da3}
+.tactic-pill.amber{background:#ffbf3c38;border:1px solid #ffbf3c;color:#ffe07d}
+.tactic-pill.cyan{background:#00f0ff33;border:1px solid #00f0ff;color:#8cf8ff}
+.tactic-pill.purple{background:#b978ff3d;border:1px solid #b978ff;color:#e2c4ff}
+#hud-cash{font-size:17px;line-height:1.05}
+.clock-badge{font-size:9.5px;color:var(--cyan);background:#00f0ff1f;border:1px solid var(--border);padding:1px 6px}
+.wanted-row,.rank-row{margin-top:3px}
+.wanted-label{font-size:9.5px;color:#fff;background:linear-gradient(135deg,#ff1744,#ff6b35);border:1px solid #ffe066;padding:1px 6px}
+#hud-stars{font-size:16px;letter-spacing:1.5px;line-height:1}
 .star-on{color:#ffd43b}
-.star-off{color:rgba(255,255,255,.22)}
-.xp-bar-wrap,.crew-cd-track,.vital-track,.rpm-track{width:100%;background:rgba(255,255,255,.14);border-radius:3px;overflow:hidden}
-.xp-bar-wrap{height:5px;margin-top:3px}
+.star-off{color:#ffffff38}
+.xp-bar-wrap{height:3.5px;margin-top:2px}
 #hud-xp-fill{height:100%;width:72%;background:linear-gradient(90deg,var(--coral),var(--gold))}
-.weapon-header,.district-header{margin-bottom:5px}
-#hud-weapon-name,#hud-weapon-ammo,#hud-district{font-size:12px}
-.weapon-slots-row{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
-.wep-slot{background:rgba(15,25,45,.85);border:1px solid rgba(255,255,255,.22);border-radius:6px;padding:3px 2px;font-size:9px;color:#d6e4f8;display:flex;flex-direction:column;align-items:center}
-.wep-slot.active{background:rgba(255,191,60,.28);border:1.5px solid #ffd43b;color:#fff}
-.wep-svg{width:32px;height:15px}
-.wep-meta{width:100%;padding:0 3px;font-size:8.5px}
+#arsenal-card{padding:5px 9px}
+.weapon-header,.district-header{margin-bottom:3px}
+#hud-weapon-name,#hud-weapon-ammo,#hud-district{font-size:10.5px}
+.weapon-slots-row{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}
+.wep-slot{background:#0f192dd1;border:1px solid #ffffff38;padding:2px;height:20px;font-size:8.5px;color:#d6e4f8;display:flex;align-items:center;justify-content:center;gap:2px}
+.wep-slot.active{background:#ffbf3c4d;border:1.5px solid #ffd43b;color:#fff}
+.wep-svg{width:19px;height:10px}
 .wep-key,#hud-map-hint,.speed-unit,.radio-row{color:var(--cyan)}
-.wep-mag{color:#ffe066}
-.crew-row{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}
-.crew-card{display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:6px;background:rgba(10,20,38,.9);border:1px solid rgba(78,255,145,.55)}
-.crew-avatar{width:24px;height:24px;border-radius:4px;border:1px solid var(--gold)}
-.crew-info,.dialogue-content{flex:1;min-width:0}
-.crew-name,.crew-skill{font-size:8.5px;white-space:nowrap}
-.crew-cd-track{height:3px;margin-top:2px}
+.wep-key{font-size:8.5px;line-height:1}
+.crew-row{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
+.crew-card{display:flex;align-items:center;gap:4px;padding:2px 4px;border-radius:4px;background:#0a1426db;border:1px solid #4eff9180}
+.crew-avatar{width:18px;height:18px;border-radius:3px;border:1px solid var(--gold)}
+.crew-name,.crew-skill{font-size:8px;line-height:1.15}
+.crew-cd-track{height:2px;margin-top:1px}
 .crew-cd-fill{height:100%;width:100%}
-#hud-bottom-left,#hud-bottom-right{position:absolute;bottom:14px;background:var(--panel);border:1.5px solid var(--border);border-radius:10px;padding:9px;backdrop-filter:blur(8px)}
-#hud-bottom-left{left:16px;width:244px}
-#hud-bottom-right{right:16px;width:254px;padding:9px 13px}
-#hud-map-hint,.vitals-labels{font-size:9.5px}
-#minimap-canvas{width:224px;height:138px;display:block;border-radius:6px;border:1px solid rgba(255,255,255,.24);background:#091322}
-.vitals-bars{display:flex;gap:6px;margin-top:7px}
-.vital-track{flex:1;height:8px}
+#hud-bottom-left,#hud-bottom-right{position:absolute;bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:6px 9px;backdrop-filter:blur(8px)}
+#hud-bottom-left{left:12px;width:214px}
+#hud-bottom-right{right:12px;width:222px;padding:6px 10px}
+#hud-map-hint,.vitals-labels{font-size:8.5px}
+#minimap-canvas{width:196px;height:112px;display:block;border-radius:5px;border:1px solid #ffffff3d;background:#091322}
+.vitals-bars{display:flex;gap:5px;margin-top:5px}
+.vital-track{flex:1;height:6px}
 #hud-health-fill{height:100%;width:92%;background:linear-gradient(90deg,#ff2e55,#4eff91)}
 #hud-armor-fill{height:100%;width:85%;background:linear-gradient(90deg,#0088ff,#00f0ff)}
 #hud-stamina-fill{height:100%;width:100%;background:linear-gradient(90deg,#ff9900,#ffdf40)}
-.vitals-labels{font-weight:800;color:var(--muted);margin-top:3px}
-#hud-bottom-center{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;width:472px}
-#context-prompt{background:rgba(10,18,34,.94);border:1.5px solid var(--gold);color:#fff;font-size:11.5px;font-weight:800;padding:5px 15px;border-radius:18px;white-space:nowrap}
-#dialogue-bar{width:100%;display:flex;align-items:center;gap:10px;background:rgba(14,19,36,.94);border:1px solid var(--coral);border-radius:9px;padding:7px 11px}
-#dialogue-avatar{width:44px;height:44px;border-radius:8px;border:2px solid var(--coral);background:#1a243b}
-#dialogue-speaker{font-size:10.5px;color:var(--coral)}
-#dialogue-line{font-size:12px;font-weight:700;color:#f4f7ff;margin-top:2px}
+.vitals-labels{font-weight:800;color:var(--muted);margin-top:2px}
+#hud-bottom-center{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);flex-direction:column;width:548px;max-width:calc(100vw - 472px);border-radius:8px;overflow:hidden;box-shadow:0 6px 18px #0000008c;border:1px solid #ff4d7985;background:#090f1cd1;backdrop-filter:blur(7px)}
+#context-prompt{width:100%;display:flex;align-items:center;justify-content:center;gap:4px;background:#ffbf3c1f;border-bottom:1px solid #ffbf3c5c;color:#fff;font-size:10px;font-weight:800;padding:3px 10px}
+#dialogue-bar{width:100%;gap:8px;padding:4px 10px}
+#dialogue-avatar{width:32px;height:32px;border-radius:6px;border:1.5px solid var(--coral);background:#1a243b}
+#dialogue-speaker{font-size:9.5px;color:var(--coral);line-height:1.1}
+#dialogue-line{font-size:10.5px;font-weight:700;color:#f4f7ff;margin-top:1px;line-height:1.22}
 .speed-row{align-items:baseline}
-#hud-speed{font-size:34px;line-height:1}
-.speed-unit{font-size:11.5px;margin-left:4px}
-#hud-gear{font-size:11px;color:#09101d;background:var(--gold);padding:2px 8px;border-radius:5px}
-.rpm-track{height:6px;margin:6px 0}
+#hud-speed{font-size:28px;line-height:1}
+.speed-unit{font-size:10px;margin-left:3px}
+#hud-gear{font-size:10px;color:#09101d;background:var(--gold);padding:1.5px 6px}
+.rpm-track{height:5px;margin:4px 0}
 #hud-rpm-fill{height:100%;width:86%;background:linear-gradient(90deg,#00f0ff,#ffbf3c,#ff2e55)}
-.veh-meta{font-size:11px}
-.radio-row{margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.14)}
+.veh-meta{font-size:10px}
+.radio-row{margin-top:4px;padding-top:4px;border-top:1px solid #ffffff24}

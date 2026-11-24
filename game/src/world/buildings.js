@@ -54,11 +54,9 @@ export function buildCityBuildings(scene,rng){
  };
 
  for(let ix=0;ix<ROAD_X.length-1;ix++)for(let iz=0;iz<ROAD_Z.length-1;iz++){
-  const cx=(ROAD_X[ix]+ROAD_X[ix+1])*.5,cz=(ROAD_Z[iz]+ROAD_Z[iz+1])*.5;
-  const dist=getDistrictAt(cx,cz),isOc=cx>140;
+  const cx=(ROAD_X[ix]+ROAD_X[ix+1])*.5,cz=(ROAD_Z[iz]+ROAD_Z[iz+1])*.5,dist=getDistrictAt(cx,cz),isOc=cx>140;
   B(82,.35,82,Std({color:isOc?0xd9c3a3:0xc4b092,roughness:.72}),cx,.17,cz);
-  const subs=isOc?[[-18,-20,22,22],[-18,20,22,22]]:[[-20,-20,28,28],[20,-20,26,28],[-20,20,28,26],[20,20,28,26]];
-  subs.forEach(([dx,dz,w,d],s)=>{
+  (isOc?[[-18,-20,22,22],[-18,20,22,22]]:[[-20,-20,28,28],[20,-20,26,28],[-20,20,28,26],[20,20,28,26]]).forEach(([dx,dz,w,d],s)=>{
    const bx=cx+dx,bz=cz+dz,[minH,maxH]=isOc?[11,23]:dist.heightRange;
    addTower(bx,bz,w,d,minH+rng()*(maxH-minH),(ix*3+iz*2+s)%6,bx>60?Math.PI*.18:0,s%2===0&&(bx>30||Math.abs(bz)<220));
   });

@@ -28,23 +28,23 @@ export function initCombatSystem(scene, state, events, weaponsSys, soundEngine) 
  function spawnExplosion(x, y, z, s = 1) {
   const h = new THREE.Group(); h.position.set(x, y, z);
   const addBlob = (r, ox, oy, oz, sx, sy, sz, col, op) => addM(h, Sph(r * s, 14, 12), Add(col, op), ox * s, oy * s, oz * s).scale.set(sx, sy, sz);
-  [[.55, 0, .35, 0, 1.12, .95, 1.1, 0xfff8d6, .92], [.92, 0, .46, 0, 1.24, 1.02, 1.18, 0xff9e22, .74], [1.45, 0, .54, 0, 1.28, 1.02, 1.2, 0xff4512, .36],
-   [.66, -.48, .48, .22, 1.15, .96, 1.1, 0xffb833, .62], [.62, .5, .44, -.16, 1.15, .96, 1.1, 0xff7b19, .6], [.64, .1, .95, .06, 1.12, .94, 1.08, 0xffaa2b, .54],
-   [.52, -.24, .78, -.22, 1.1, .92, 1.06, 0xff5a14, .48], [.5, .32, .82, .24, 1.1, .92, 1.06, 0xffd25a, .52]].forEach((a) => addBlob(...a));
+  [[.46, 0, .35, 0, 1.08, .92, 1.06, 0xfff4c8, .64], [.82, 0, .46, 0, 1.18, .98, 1.12, 0xff941c, .52], [1.28, 0, .54, 0, 1.22, .98, 1.14, 0xff4512, .24],
+   [.58, -.46, .48, .22, 1.1, .94, 1.06, 0xffb833, .46], [.56, .48, .44, -.16, 1.1, .94, 1.06, 0xff7b19, .44], [.58, .1, .95, .06, 1.08, .92, 1.04, 0xffaa2b, .4],
+   [.46, -.24, .78, -.22, 1.06, .9, 1.02, 0xff5a14, .36], [.44, .32, .82, .24, 1.06, .9, 1.02, 0xffd25a, .38]].forEach((a) => addBlob(...a));
 
   const fCols = [0xffe066, 0xff9e22, 0xff5218, 0xffb833, 0xff6a14];
   for (let i = 0; i < 14; i++) {
    const az = (i / 14) * Math.PI * 2 + (i % 3) * .22, el = .32 + (i % 3) * .3;
-   const t = addM(h, Cone((.32 + (i % 2) * .14) * s, (1.15 + (i % 3) * .42) * s, 8), Add(fCols[i % 5], .82), Math.cos(az) * .46 * s, (.42 + (i % 3) * .26) * s, Math.sin(az) * .46 * s);
+   const t = addM(h, Cone((.3 + (i % 2) * .12) * s, (1.1 + (i % 3) * .38) * s, 8), Add(fCols[i % 5], .72), Math.cos(az) * .44 * s, (.42 + (i % 3) * .26) * s, Math.sin(az) * .44 * s);
    t.rotation.set(Math.sin(az) * (1.52 - el), 0, -Math.cos(az) * (1.52 - el));
   }
   for (let i = 0; i < 24; i++) {
-   const ang = (i / 24) * Math.PI * 2 + (i % 3) * .12, d = (1.1 + (i % 4) * .48) * s, ey = (.32 + (i % 5) * .44) * s;
-   addM(h, new THREE.BoxGeometry(.06 * s, .06 * s, (.85 + (i % 3) * .35) * s), Add(i % 2 === 0 ? 0xfff49a : 0xff7e1a, .95), Math.cos(ang) * d, ey, Math.sin(ang) * d).rotation.set(.42 + (i % 3) * .24, -ang, 0);
+   const ang = (i / 24) * Math.PI * 2 + (i % 3) * .12, d = (1.05 + (i % 4) * .45) * s, ey = (.32 + (i % 5) * .44) * s;
+   addM(h, new THREE.BoxGeometry(.055 * s, .055 * s, (.8 + (i % 3) * .32) * s), Add(i % 2 === 0 ? 0xfff49a : 0xff7e1a, .86), Math.cos(ang) * d, ey, Math.sin(ang) * d).rotation.set(.42 + (i % 3) * .24, -ang, 0);
   }
-  addM(h, new THREE.CircleGeometry(2.3 * s, 22), Add(0xff7e24, .48), 0, -y + .075, 0).rotation.x = -Math.PI / 2;
-  addM(h, new THREE.CircleGeometry(1.55 * s, 18), Bas({ color: 0x1a1218, transparent: true, opacity: .44, depthWrite: false }), 0, -y + .068, 0).rotation.x = -Math.PI / 2;
-  addM(h, new THREE.RingGeometry(1.2 * s, 1.9 * s, 24), Add(0xff9a2e, .76, { side: THREE.DoubleSide }), 0, -y + .095, 0).rotation.x = -Math.PI / 2;
+  addM(h, new THREE.CircleGeometry(2.05 * s, 22), Add(0xff7e24, .3), 0, -y + .075, 0).rotation.x = -Math.PI / 2;
+  addM(h, new THREE.CircleGeometry(1.45 * s, 18), Bas({ color: 0x1a1218, transparent: true, opacity: .44, depthWrite: false }), 0, -y + .068, 0).rotation.x = -Math.PI / 2;
+  addM(h, new THREE.RingGeometry(1.1 * s, 1.7 * s, 24), Add(0xff9a2e, .48, { side: THREE.DoubleSide }), 0, -y + .095, 0).rotation.x = -Math.PI / 2;
   fxGroup.add(h); explosions.push({ mesh: h, ttl: .85 });
  }
 

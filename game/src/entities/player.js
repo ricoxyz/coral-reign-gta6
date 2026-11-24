@@ -3,9 +3,9 @@ export function buildCharacterMesh(options = {}) {
  const THREE = window.THREE, group = new THREE.Group();
  const Std = (c, r = .5, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
  const Bas = (p) => new THREE.MeshBasicMaterial(p);
- const skinMat = Std(options.skin || 0xd99b72, .55), jacketMat = Std(options.jacket || 0xff3b78, .34, .22), lapelMat = Std(options.lapel || 0x1a2236, .4, .3);
- const shirtMat = Std(options.shirt || 0x00f0ff, .45), pantsMat = Std(options.pants || 0x182238, .65), shoeMat = Std(options.shoe || 0x0f1218, .75);
- const hairMat = Std(options.hair || 0x261a2c, .72), gunMat = Std(0x1e2533, .22, .85), gunAccentMat = Std(0xffbf3c, .25, .8);
+ const skinMat = Std(options.skin || 0xd99b72, .55), jacketMat = Std(options.jacket || 0xff4480, .3, .22), lapelMat = Std(options.lapel || 0x1d2842, .38, .3);
+ const shirtMat = Std(options.shirt || 0x00f0ff, .45), pantsMat = Std(options.pants || 0x1d2942, .6), shoeMat = Std(options.shoe || 0x111622, .72);
+ const hairMat = Std(options.hair || 0x3b2745, .48, .12), gunMat = Std(0x1e2533, .22, .85), gunAccentMat = Std(0xffbf3c, .25, .8);
 
  const P = (par, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); par.add(m); return m; };
  const G = (geo, mat, x, y, z) => P(group, geo, mat, x, y, z);
@@ -73,9 +73,9 @@ export function buildCharacterMesh(options = {}) {
  P(gunMesh, Cyl(.028, .028, .16, 8), gunAccentMat, 0, .095, .02).rotation.x = Math.PI / 2;
 
  const muzzleFlash = new THREE.Group(); muzzleFlash.position.set(0, .02, .6);
- const flashMat = Add(0xff9f24, .88), sparkMat = Add(0xffe066, .94);
- P(muzzleFlash, Sph(.065, 8, 8), Bas({ color: 0xfff5cc }), 0, 0, 0); P(muzzleFlash, Sph(.16, 10, 8), Add(0xff7b1c, .34), 0, 0, .04);
- P(muzzleFlash, Cone(.08, .32), flashMat, 0, 0, .16).rotation.x = Math.PI / 2;
+ const flashMat = Add(0xffae24, .92), sparkMat = Add(0xffe46e, .98);
+ P(muzzleFlash, Sph(.08, 8, 8), Bas({ color: 0xfff8d6 }), 0, 0, 0); P(muzzleFlash, Sph(.2, 10, 8), Add(0xff841c, .42), 0, 0, .05);
+ P(muzzleFlash, Cone(.1, .38), flashMat, 0, 0, .18).rotation.x = Math.PI / 2;
  for (let sp = 0; sp < 6; sp++) {
   const ang = (sp / 6) * Math.PI * 2 + .35;
   P(muzzleFlash, Cone(.026, .19 + (sp % 2) * .07, 5), sp % 2 === 0 ? sparkMat : flashMat, Math.cos(ang) * .08, Math.sin(ang) * .08, .03).rotation.z = ang - Math.PI / 2;

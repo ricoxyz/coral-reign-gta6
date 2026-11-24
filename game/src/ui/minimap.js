@@ -4,7 +4,7 @@ import { ROAD_X, ROAD_Z } from '../world/roads.js';
 export function renderMinimap(state) {
  const canvas = document.getElementById('minimap-canvas');
  if (!canvas) return;
- const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height, px = state.player.x, pz = state.player.z, scale = .52;
+ const ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height, px = state.player.x, pz = state.player.z, scale = .46;
  const tx = (wx) => w * .5 + (wx - px) * scale, ty = (wz) => h * .5 + (wz - pz) * scale;
  const dot = (x, y, r, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
  ctx.fillStyle = '#18263b'; ctx.fillRect(0, 0, w, h);

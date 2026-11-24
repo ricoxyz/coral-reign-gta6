@@ -14,30 +14,31 @@ export function buildRoadNetwork(scene) {
  ctx.fillStyle = '#e8dcc8'; ctx.fillRect(0, 0, 9, 256); ctx.fillRect(247, 0, 9, 256);
  ctx.fillStyle = '#00e5ff'; ctx.fillRect(9, 0, 3, 256); ctx.fillStyle = '#ff5e7e'; ctx.fillRect(244, 0, 3, 256);
 
+ const Std = (p) => new THREE.MeshStandardMaterial(p), Bas = (p) => new THREE.MeshBasicMaterial(p), Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Pln = (w, h) => new THREE.PlaneGeometry(w, h), HPI = Math.PI / 2;
  const roadTex = new THREE.CanvasTexture(c); roadTex.wrapS = roadTex.wrapT = THREE.RepeatWrapping; roadTex.repeat.set(1, 44);
- const matNS = new THREE.MeshStandardMaterial({ map: roadTex, roughness: .9, metalness: .04 });
- for (const rx of ROAD_X) { const m = new THREE.Mesh(new THREE.PlaneGeometry(24, 1100), matNS); m.rotation.x = -Math.PI / 2; m.position.set(rx, .04, 0); group.add(m); }
+ const matNS = Std({ map: roadTex, roughness: .9, metalness: .04 });
+ for (const rx of ROAD_X) { const m = new THREE.Mesh(Pln(24, 1100), matNS); m.rotation.x = -HPI; m.position.set(rx, .04, 0); group.add(m); }
 
  const texEW = roadTex.clone(); texEW.needsUpdate = true; texEW.repeat.set(1, 30);
- const matEW = new THREE.MeshStandardMaterial({ map: texEW, roughness: .9, metalness: .04 });
- for (const rz of ROAD_Z) { const m = new THREE.Mesh(new THREE.PlaneGeometry(22, 720), matEW); m.rotation.set(-Math.PI / 2, 0, Math.PI / 2); m.position.set(-45, .05, rz); group.add(m); }
+ const matEW = Std({ map: texEW, roughness: .9, metalness: .04 });
+ for (const rz of ROAD_Z) { const m = new THREE.Mesh(Pln(22, 720), matEW); m.rotation.set(-HPI, 0, HPI); m.position.set(-45, .05, rz); group.add(m); }
 
- const crossGeo = new THREE.BoxGeometry(24.5, .08, 24.5), crossMat = new THREE.MeshStandardMaterial({ color: 0x2c3342, roughness: .85, metalness: .04 });
- const poleMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, metalness: .6, roughness: .3 }), stripeMat = new THREE.MeshBasicMaterial({ color: 0xf8fbff });
+ const crossGeo = Box(24.5, .08, 24.5), crossMat = Std({ color: 0x2c3342, roughness: .85, metalness: .04 });
+ const poleMat = Std({ color: 0x4a5568, metalness: .6, roughness: .3 }), stripeMat = Bas({ color: 0xf8fbff });
  const addM = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); group.add(m); return m; };
 
  ROAD_X.forEach((ix, i) => ROAD_Z.forEach((iz, j) => {
   addM(crossGeo, crossMat, ix, .03, iz);
-  if (ix >= 0) for (let s = -8; s <= 8; s += 3.2) addM(new THREE.PlaneGeometry(1.4, 3.2), stripeMat, ix + s, .085, iz + 12.6).rotation.x = -Math.PI / 2;
+  if (ix >= 0) for (let s = -8; s <= 8; s += 3.2) addM(Pln(1.4, 3.2), stripeMat, ix + s, .085, iz + 12.6).rotation.x = -HPI;
   if ((i + j) % 2 === 0) {
    addM(new THREE.CylinderGeometry(.18, .22, 6.8, 8), poleMat, ix + 13, 3.4, iz + 13);
-   addM(new THREE.BoxGeometry(6.5, .22, .22), poleMat, ix + 9.8, 6.4, iz + 13);
-   addM(new THREE.BoxGeometry(.65, 1.3, .65), new THREE.MeshBasicMaterial({ color: (i + j) % 4 === 0 ? 0x00ff88 : 0xff3355 }), ix + 7.5, 5.9, iz + 13);
+   addM(Box(6.5, .22, .22), poleMat, ix + 9.8, 6.4, iz + 13);
+   addM(Box(.65, 1.3, .65), Bas({ color: (i + j) % 4 === 0 ? 0x00ff88 : 0xff3355 }), ix + 7.5, 5.9, iz + 13);
   }
  }));
 
- const archMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x005577, roughness: .2 });
- for (let k = -1; k <= 1; k++) addM(new THREE.TorusGeometry(14, .55, 10, 28, Math.PI), archMat, 110 + k * 24, .2, -330).rotation.y = Math.PI / 2;
+ const archMat = Std({ color: 0x00e5ff, emissive: 0x005577, roughness: .2 });
+ for (let k = -1; k <= 1; k++) addM(new THREE.TorusGeometry(14, .55, 10, 28, Math.PI), archMat, 110 + k * 24, .2, -330).rotation.y = HPI;
  scene.add(group);
  return { group };
 }

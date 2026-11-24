@@ -48,6 +48,7 @@ export function buildWorldProps(scene) {
  const THREE = window.THREE, group = new THREE.Group(), palmCrowns = [], stuntRamps = [];
  const S = (p) => Std(THREE, p), Bs = (p) => Bas(THREE, p), B = (w, h, d) => Box(THREE, w, h, d), C = (rt, rb, h, s = 8) => Cyl(THREE, rt, rb, h, s), Tor = (r, t, rs, ts) => new THREE.TorusGeometry(r, t, rs, ts);
  const poleMat = S({ color: 0x222c3c, metalness: .8 }), rampMat = S({ color: 0xff7e29, emissive: 0x551800, roughness: .35 });
+ const HPI = Math.PI / 2, G = (...a) => addM(group, ...a);
 
  for (const [lx, sides, lamps] of [[110, [-14.2, 14.2], 1], [220, [-14.2, 14.2], 1], [246, [0], 0], [0, [-14.2, 14.2], 1]]) {
   for (let z = -380; z <= 380; z += 26) {
@@ -57,13 +58,13 @@ export function buildWorldProps(scene) {
     palm.position.set(lx + side, 0, z); palm.rotation.y = (z * .3) % (Math.PI * 2); group.add(palm); palmCrowns.push(palm);
    }
    if (lamps) {
-    addM(group, C(.1, .14, 5.5, 6), poleMat, lx + 12.8, 2.75, z + 11);
-    addM(group, Sph(THREE, .4), Bs({ color: ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff }), lx + 12.8, 5.65, z + 11);
+    G(C(.1, .14, 5.5, 6), poleMat, lx + 12.8, 2.75, z + 11);
+    G(Sph(THREE, .4), Bs({ color: ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff }), lx + 12.8, 5.65, z + 11);
    }
   }
  }
- [[110, -85, 0], [220, -155, 0], [110, 160, Math.PI], [0, -270, 0], [-110, 50, 0], [220, 270, Math.PI], [-220, -165, 0], [55, -330, Math.PI / 2], [-55, 220, -Math.PI / 2], [165, 0, Math.PI / 2]].forEach(([rx, rz, ry], i) => {
-  addM(group, B(5.5, 1.4, 9.5), rampMat, rx + 6, .55, rz, .22, ry);
+ [[110, -85, 0], [220, -155, 0], [110, 160, Math.PI], [0, -270, 0], [-110, 50, 0], [220, 270, Math.PI], [-220, -165, 0], [55, -330, HPI], [-55, 220, -HPI], [165, 0, HPI]].forEach(([rx, rz, ry], i) => {
+  G(B(5.5, 1.4, 9.5), rampMat, rx + 6, .55, rz, .22, ry);
   stuntRamps.push({ id: `ramp_${i}`, x: rx + 6, z: rz, radius: 5.5 });
  });
  const hullMat = S({ color: 0xffffff, roughness: .18, metalness: .2 }), deckMat = Bs({ color: 0x00e5ff });
@@ -99,20 +100,20 @@ export function buildWorldProps(scene) {
   addM(cg, B(1.45 * s, 1.1 * s, 1.15 * s), crateMat, 0, .55 * s, 0); addM(cg, B(1.5 * s, .18 * s, 1.2 * s), bandMat, 0, .55 * s, 0);
   cg.position.set(cx, 0, cz); cg.rotation.y = rot; group.add(cg);
  });
- addM(group, B(88, 1, 22), S({ color: 0x6e472b, roughness: .78 }), 296, 1.1, 282);
+ G(B(88, 1, 22), S({ color: 0x6e472b, roughness: .78 }), 296, 1.1, 282);
  const pilMat = S({ color: 0x3d2718, roughness: .85 });
- for (let px = 260; px <= 332; px += 12) for (const pz of [273, 291]) addM(group, C(.45, .45, 3.2), pilMat, px, .2, pz);
+ for (let px = 260; px <= 332; px += 12) for (const pz of [273, 291]) G(C(.45, .45, 3.2), pilMat, px, .2, pz);
  const ferrisGroup = new THREE.Group(); ferrisGroup.position.set(318, 15.8, 282); ferrisGroup.rotation.y = -.35;
  const legMat = S({ color: 0xe6eefc, emissive: 0x1a263b, roughness: .3, metalness: .75 });
  for (const lz of [-2.4, 2.4]) for (const lx of [-1, 1]) addM(ferrisGroup, C(.35, .5, 17.5), legMat, lx * 4.8, -7.2, lz, 0, 0, lx * .32);
- addM(ferrisGroup, C(1.2, 1.2, 6.2, 12), S({ color: 0xffbf3c, emissive: 0x553300, roughness: .25, metalness: .8 }), 0, 0, 0, Math.PI / 2);
+ addM(ferrisGroup, C(1.2, 1.2, 6.2, 12), S({ color: 0xffbf3c, emissive: 0x553300, roughness: .25, metalness: .8 }), 0, 0, 0, HPI);
  const ferrisWheel = new THREE.Group();
  const rimOut = S({ color: 0xff4d79, emissive: 0x881838, roughness: .25, metalness: .5 }), rimIn = S({ color: 0x00e5ff, emissive: 0x004d66, roughness: .25, metalness: .5 });
  for (const wz of [-1.4, 1.4]) { addM(ferrisWheel, Tor(12.5, .42, 10, 36), rimOut, 0, 0, wz); addM(ferrisWheel, Tor(7.8, .28, 8, 28), rimIn, 0, 0, wz); }
  const spokeMat = S({ color: 0xffe082, emissive: 0x3b2800, roughness: .3, metalness: .6 });
  for (let s = 0; s < 12; s++) {
   const ang = (s / 12) * Math.PI * 2;
-  addM(ferrisWheel, C(.12, .12, 12.5, 6), spokeMat, Math.cos(ang) * 6.25, Math.sin(ang) * 6.25, 0, 0, 0, ang - Math.PI / 2);
+  addM(ferrisWheel, C(.12, .12, 12.5, 6), spokeMat, Math.cos(ang) * 6.25, Math.sin(ang) * 6.25, 0, 0, 0, ang - HPI);
   addM(ferrisWheel, B(1.8, 1.5, 2.2), S({ color: uCols[s % 5], emissive: 0x221018, roughness: .3 }), Math.cos(ang) * 12.5, Math.sin(ang) * 12.5 - .9, 0);
  }
  ferrisGroup.add(ferrisWheel); group.add(ferrisGroup); scene.add(group);
