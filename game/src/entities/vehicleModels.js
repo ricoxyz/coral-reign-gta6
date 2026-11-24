@@ -46,9 +46,9 @@ export function buildSculptedVehicleMesh(archetype) {
  const tire = Std({ color: 0x11141b, roughness: .85 });
  const calMat = Bas({ color: isPol ? 0xffbf3c : 0xff2248 }), headM = Bas({ color: 0xeaffff }), tailM = Bas({ color: 0xff1e42 });
 
- const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (r, len, seg) => new THREE.CylinderGeometry(r, r, len, seg);
+ const Box = (w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (r, len, seg) => new THREE.CylinderGeometry(r, r, len, seg), M = (g, m) => new THREE.Mesh(g, m);
  const B = (w, h, d, mat, x, y, z, rx = 0) => {
-  const m = new THREE.Mesh(Box(w, h, d), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; root.add(m); return m;
+  const m = M(Box(w, h, d), mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; root.add(m); return m;
  };
 
  const bodyPts = isHeavy
@@ -64,7 +64,7 @@ export function buildSculptedVehicleMesh(archetype) {
   : isPol ? [[-L * .18, H * .93], [L * .04, H * .93], [L * .02, H * .99], [-L * .16, H * .99]]
   : [[-L * .15, H * .93], [L * .02, H * .93], [0, H * .995], [-L * .13, H * .995]];
 
- root.add(new THREE.Mesh(extrudeSideProfile(THREE, bodyPts, W * .86, .07), paint), new THREE.Mesh(extrudeSideProfile(THREE, cabinPts, W * .7, .045), glass), new THREE.Mesh(extrudeSideProfile(THREE, roofTopPts, W * .66, .03), roofMat));
+ root.add(M(extrudeSideProfile(THREE, bodyPts, W * .86, .07), paint), M(extrudeSideProfile(THREE, cabinPts, W * .7, .045), glass), M(extrudeSideProfile(THREE, roofTopPts, W * .66, .03), roofMat));
 
  B(W * 1.02, .08, L * .64, carbon, 0, H * .17, 0); B(W * .99, .07, .34, carbon, 0, H * .16, L * .495);
  B(W * .68, H * .17, .12, carbon, 0, H * .29, L * .485); B(W * .88, .15, .22, carbon, 0, H * .18, -L * .475);
@@ -72,8 +72,8 @@ export function buildSculptedVehicleMesh(archetype) {
 
  const arches = [[-W * .47, L * .31], [W * .47, L * .31], [-W * .47, -L * .31], [W * .47, -L * .31]];
  for (const [ax, az] of arches) {
-  const fl = new THREE.Mesh(new THREE.TorusGeometry(.45, .075, 8, 16, Math.PI), paint); fl.rotation.y = Math.PI / 2; fl.position.set(ax, .41, az);
-  const wl = new THREE.Mesh(Cyl(.44, .28, 14), carbon); wl.rotation.z = Math.PI / 2; wl.position.set(ax * .88, .4, az);
+  const fl = M(new THREE.TorusGeometry(.45, .075, 8, 16, Math.PI), paint); fl.rotation.y = Math.PI / 2; fl.position.set(ax, .41, az);
+  const wl = M(Cyl(.44, .28, 14), carbon); wl.rotation.z = Math.PI / 2; wl.position.set(ax * .88, .4, az);
   root.add(fl, wl);
  }
 
@@ -87,22 +87,22 @@ export function buildSculptedVehicleMesh(archetype) {
   if (isPol) B(.08, H * .34, .22, carbon, s * W * .24, H * .34, L * .53);
   if (isFast) { B(.14, .04, L * .34, accent, s * .21, H * .58, L * .27, .15); B(.08, .22, .58, carbon, s * W * .46, H * .36, -L * .04); }
   if (isFast || isPol) { B(.07, .23, .2, carbon, s * W * .34, H * .71, -L * .44); B(.05, .16, .38, accent, s * W * .48, H * .84, -L * .45); }
-  for (const o of [.18, .26]) { const p = new THREE.Mesh(Cyl(.052, .22, 10), chrome); p.rotation.x = Math.PI / 2; p.position.set(s * W * o, H * .19, -L * .505); root.add(p); }
+  for (const o of [.18, .26]) { const p = M(Cyl(.052, .22, 10), chrome); p.rotation.x = Math.PI / 2; p.position.set(s * W * o, H * .19, -L * .505); root.add(p); }
  }
 
- const plate = new THREE.Mesh(new THREE.PlaneGeometry(.5, .21), Bas({ map: getLicensePlateTexture() }));
+ const plate = M(new THREE.PlaneGeometry(.5, .21), Bas({ map: getLicensePlateTexture() }));
  plate.rotation.y = Math.PI; plate.position.set(0, H * .33, -L * .506);
- const shad = new THREE.Mesh(new THREE.PlaneGeometry(W * 1.14, L * 1.08), Bas({ color: 0x050810, transparent: true, opacity: .52, depthWrite: false }));
+ const shad = M(new THREE.PlaneGeometry(W * 1.14, L * 1.08), Bas({ color: 0x050810, transparent: true, opacity: .52, depthWrite: false }));
  shad.rotation.x = -Math.PI / 2; shad.position.y = .06; root.add(plate, shad);
 
  const wheels = [];
  for (const [wx, wz] of arches) {
   const wg = new THREE.Group();
   for (const [r, len, seg, mat] of [[.39, .34, 18, tire], [.27, .35, 14, chrome], [.22, .355, 12, carbon]]) {
-   const m = new THREE.Mesh(Cyl(r, len, seg), mat); m.rotation.z = Math.PI / 2; wg.add(m);
+   const m = M(Cyl(r, len, seg), mat); m.rotation.z = Math.PI / 2; wg.add(m);
   }
-  for (let sp = 0; sp < 5; sp++) { const sk = new THREE.Mesh(Box(.365, .05, .24), chrome); sk.rotation.x = (sp / 5) * Math.PI * 2; wg.add(sk); }
-  const cal = new THREE.Mesh(Box(.362, .14, .09), calMat); cal.position.set(0, .11, .11); wg.add(cal);
+  for (let sp = 0; sp < 5; sp++) { const sk = M(Box(.365, .05, .24), chrome); sk.rotation.x = (sp / 5) * Math.PI * 2; wg.add(sk); }
+  const cal = M(Box(.362, .14, .09), calMat); cal.position.set(0, .11, .11); wg.add(cal);
   wg.position.set(wx, .39, wz); root.add(wg); wheels.push(wg);
  }
 
@@ -113,7 +113,7 @@ export function buildSculptedVehicleMesh(archetype) {
   sirenRed = B(W * .34, .16, .28, Bas({ color: 0xff1744 }), -W * .19, H * 1.06, barZ);
   sirenBlue = B(W * .34, .16, .28, Bas({ color: 0x00d8ff }), W * .19, H * 1.06, barZ);
   for (const [px, col] of [[-W * .68, 0xff1744], [W * .68, 0x00d8ff]]) {
-   const pl = new THREE.Mesh(new THREE.CircleGeometry(1.65, 14), Bas({ color: col, transparent: true, opacity: .22, depthWrite: false }));
+   const pl = M(new THREE.CircleGeometry(1.65, 14), Bas({ color: col, transparent: true, opacity: .22, depthWrite: false }));
    pl.rotation.x = -Math.PI / 2; pl.position.set(px, .08, 0); root.add(pl);
   }
   sirenLight = new THREE.PointLight(0xff1744, .85, 12); sirenLight.position.set(0, H + 1.25, 0); root.add(sirenLight);

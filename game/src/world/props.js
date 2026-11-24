@@ -3,6 +3,7 @@ import { ROAD_Z } from './roads.js';
 
 const Std = (THREE, p) => new THREE.MeshStandardMaterial(p), Bas = (THREE, p) => new THREE.MeshBasicMaterial(p);
 const Box = (THREE, w, h, d) => new THREE.BoxGeometry(w, h, d), Cyl = (THREE, rt, rb, h, s = 8) => new THREE.CylinderGeometry(rt, rb, h, s);
+const Sph = (THREE, r, w = 8, h = 8) => new THREE.SphereGeometry(r, w, h), Cone = (THREE, r, h, s = 4) => new THREE.ConeGeometry(r, h, s);
 const addM = (p, geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) => {
  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z);
  if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
@@ -20,24 +21,24 @@ export function createPalmTreeMesh(THREE, scale = 1) {
  const crown = new THREE.Group(); crown.position.set(curX, curY, 0);
  for (let f = 0; f < 8; f++) {
   const h = new THREE.Group(); h.rotation.y = (f / 8) * Math.PI * 2;
-  addM(h, new THREE.ConeGeometry(.45 * scale, 2.2 * scale, 4), frondMat, scale, .1 * scale, 0, 0, 0, -Math.PI * .42);
-  addM(h, new THREE.ConeGeometry(.38 * scale, 2.1 * scale, 4), frondMat, 2.45 * scale, -.45 * scale, 0, 0, 0, -Math.PI * .62);
+  addM(h, Cone(THREE, .45 * scale, 2.2 * scale), frondMat, scale, .1 * scale, 0, 0, 0, -Math.PI * .42);
+  addM(h, Cone(THREE, .38 * scale, 2.1 * scale), frondMat, 2.45 * scale, -.45 * scale, 0, 0, 0, -Math.PI * .62);
   crown.add(h);
  }
  palm.add(crown); return palm;
 }
 
 function createPinkScooterRiderMesh(THREE) {
- const g = new THREE.Group(), B = (w, h, d) => Box(THREE, w, h, d), C = (rt, rb, h, s = 8) => Cyl(THREE, rt, rb, h, s);
- const pink = Std(THREE, { color: 0xff4da6, emissive: 0x3b0824, roughness: .22, metalness: .3 }), chrome = Std(THREE, { color: 0xeaf2ff, roughness: .15, metalness: .9 });
- const dark = Std(THREE, { color: 0x161c28, roughness: .65 }), skin = Std(THREE, { color: 0xd99b72, roughness: .5 }), teal = Std(THREE, { color: 0x00e5ff, roughness: .35 }), white = Std(THREE, { color: 0xfff8f0, roughness: .25 });
+ const g = new THREE.Group(), B = (w, h, d) => Box(THREE, w, h, d), C = (rt, rb, h, s = 8) => Cyl(THREE, rt, rb, h, s), S = (p) => Std(THREE, p);
+ const pink = S({ color: 0xff4da6, emissive: 0x3b0824, roughness: .22, metalness: .3 }), chrome = S({ color: 0xeaf2ff, roughness: .15, metalness: .9 });
+ const dark = S({ color: 0x161c28, roughness: .65 }), skin = S({ color: 0xd99b72, roughness: .5 }), teal = S({ color: 0x00e5ff, roughness: .35 }), white = S({ color: 0xfff8f0, roughness: .25 });
  for (const wz of [-.62, .62]) { addM(g, C(.28, .28, .16, 12), dark, 0, .28, wz, 0, 0, Math.PI / 2); addM(g, C(.16, .16, .17, 10), chrome, 0, .28, wz, 0, 0, Math.PI / 2); }
  addM(g, B(.42, .22, 1.35), pink, 0, .36, 0); addM(g, B(.46, .48, .72), pink, 0, .56, -.38);
  addM(g, B(.36, .76, .24), pink, 0, .72, .52, -.22); addM(g, B(.34, .14, .64), dark, 0, .84, -.22);
  addM(g, C(.03, .03, .72), chrome, 0, 1.12, .44, 0, 0, Math.PI / 2);
- addM(g, new THREE.SphereGeometry(.11, 10, 10), Bas(THREE, { color: 0xfff6cc }), 0, 1.06, .58);
+ addM(g, Sph(THREE, .11, 10, 10), Bas(THREE, { color: 0xfff6cc }), 0, 1.06, .58);
  addM(g, B(.2, .1, .08), Bas(THREE, { color: 0xff2248 }), 0, .66, -.76);
- addM(g, B(.36, .52, .26), teal, 0, 1.16, -.14, .18); addM(g, new THREE.SphereGeometry(.19, 12, 12), white, 0, 1.56, -.04);
+ addM(g, B(.36, .52, .26), teal, 0, 1.16, -.14, .18); addM(g, Sph(THREE, .19, 12, 12), white, 0, 1.56, -.04);
  addM(g, B(.26, .08, .12), Bas(THREE, { color: 0x111a2b }), 0, 1.55, .12);
  for (const sx of [-.22, .22]) { addM(g, C(.06, .05, .48), skin, sx, 1.24, .16, -.95); addM(g, C(.07, .06, .46), dark, sx * .85, .72, .04, -.55); }
  return g;
@@ -45,7 +46,7 @@ function createPinkScooterRiderMesh(THREE) {
 
 export function buildWorldProps(scene) {
  const THREE = window.THREE, group = new THREE.Group(), palmCrowns = [], stuntRamps = [];
- const S = (p) => Std(THREE, p), Bs = (p) => Bas(THREE, p), B = (w, h, d) => Box(THREE, w, h, d), C = (rt, rb, h, s = 8) => Cyl(THREE, rt, rb, h, s);
+ const S = (p) => Std(THREE, p), Bs = (p) => Bas(THREE, p), B = (w, h, d) => Box(THREE, w, h, d), C = (rt, rb, h, s = 8) => Cyl(THREE, rt, rb, h, s), Tor = (r, t, rs, ts) => new THREE.TorusGeometry(r, t, rs, ts);
  const poleMat = S({ color: 0x222c3c, metalness: .8 }), rampMat = S({ color: 0xff7e29, emissive: 0x551800, roughness: .35 });
 
  for (const [lx, sides, lamps] of [[110, [-14.2, 14.2], 1], [220, [-14.2, 14.2], 1], [246, [0], 0], [0, [-14.2, 14.2], 1]]) {
@@ -57,7 +58,7 @@ export function buildWorldProps(scene) {
    }
    if (lamps) {
     addM(group, C(.1, .14, 5.5, 6), poleMat, lx + 12.8, 2.75, z + 11);
-    addM(group, new THREE.SphereGeometry(.4, 8, 8), Bs({ color: ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff }), lx + 12.8, 5.65, z + 11);
+    addM(group, Sph(THREE, .4), Bs({ color: ((z / 26) | 0) % 2 === 0 ? 0xff4d79 : 0x00f0ff }), lx + 12.8, 5.65, z + 11);
    }
   }
  }
@@ -76,10 +77,10 @@ export function buildWorldProps(scene) {
   const hero = bz >= -90 && bz <= 80;
   if (!hero && Math.abs(bz) % 28 === 14) continue;
   const canMat = S({ color: uCols[Math.abs(Math.round(bz / 14)) % 5], roughness: .35 });
-  const xs = hero ? [238.5 + (Math.abs(bz) % 3) * 1.4, 248, 258.5] : [248 + (Math.abs(bz) % 3) * 6, 262, 194];
+  const xs = hero ? (bz > -10 && bz < 48 ? [238.5 + (Math.abs(bz) % 3) * 1.4, 248, 258.5] : [264, 271]) : [264, 271, 194];
   xs.forEach((ux, k) => {
    const umb = new THREE.Group();
-   addM(umb, C(.08, .08, 2.7, 6), whiteMat, 0, 1.35, 0); addM(umb, new THREE.ConeGeometry(2.45, 1, 8), canMat, 0, 2.65, 0);
+   addM(umb, C(.08, .08, 2.7, 6), whiteMat, 0, 1.35, 0); addM(umb, Cone(THREE, 2.45, 1, 8), canMat, 0, 2.65, 0);
    for (const lx of [-1.3, 1.3]) addM(umb, B(.95, .32, 2.2), whiteMat, lx, .22, .3);
    umb.position.set(ux, .05, bz + k * 3.8); group.add(umb);
   });
@@ -107,7 +108,7 @@ export function buildWorldProps(scene) {
  addM(ferrisGroup, C(1.2, 1.2, 6.2, 12), S({ color: 0xffbf3c, emissive: 0x553300, roughness: .25, metalness: .8 }), 0, 0, 0, Math.PI / 2);
  const ferrisWheel = new THREE.Group();
  const rimOut = S({ color: 0xff4d79, emissive: 0x881838, roughness: .25, metalness: .5 }), rimIn = S({ color: 0x00e5ff, emissive: 0x004d66, roughness: .25, metalness: .5 });
- for (const wz of [-1.4, 1.4]) { addM(ferrisWheel, new THREE.TorusGeometry(12.5, .42, 10, 36), rimOut, 0, 0, wz); addM(ferrisWheel, new THREE.TorusGeometry(7.8, .28, 8, 28), rimIn, 0, 0, wz); }
+ for (const wz of [-1.4, 1.4]) { addM(ferrisWheel, Tor(12.5, .42, 10, 36), rimOut, 0, 0, wz); addM(ferrisWheel, Tor(7.8, .28, 8, 28), rimIn, 0, 0, wz); }
  const spokeMat = S({ color: 0xffe082, emissive: 0x3b2800, roughness: .3, metalness: .6 });
  for (let s = 0; s < 12; s++) {
   const ang = (s / 12) * Math.PI * 2;

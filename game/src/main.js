@@ -32,7 +32,7 @@ function bootCoralReign() {
  renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
  const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0xe89b6c, .00038);
- const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, .5, 1800);
+ const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, .5, 2600);
 
  const world = buildPalmaDoradaWorld(scene, state), traffic = initTrafficVehicles(scene, state);
  const playerEntity = initPlayerEntity(scene, state), pedsAndEnemies = initPedestriansAndEnemies(scene, state);

@@ -1,14 +1,9 @@
 // Golden-hour sunset & twilight night-market sky domes, beach, ocean & plaza
 import { WORLD_CONFIG } from '../core/config.js';
 
-const mkTex = (THREE, w, h, fn) => {
- const c = document.createElement('canvas'); c.width = w; c.height = h;
- fn(c.getContext('2d')); return new THREE.CanvasTexture(c);
-};
-const linGrad = (ctx, x1, y1, x2, y2, stops) => {
- const g = ctx.createLinearGradient(x1, y1, x2, y2);
- stops.forEach(([s, c]) => g.addColorStop(s, c)); return g;
-};
+const mkTex = (THREE, w, h, fn) => { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d')); return new THREE.CanvasTexture(c); };
+const linGrad = (ctx, x1, y1, x2, y2, stops) => { const g = ctx.createLinearGradient(x1, y1, x2, y2); stops.forEach(([s, c]) => g.addColorStop(s, c)); return g; };
+const rg = (c, a) => `rgba(${c},${a})`;
 
 function buildSkyTex(THREE, stops, stars, cloudN, cloudY, cloudStop) {
  return mkTex(THREE, 1024, 512, (ctx) => {
@@ -71,31 +66,29 @@ function buildNightMarketPlaza(THREE) {
 export function buildOceanAndSky(scene) {
  const THREE = window.THREE, group = new THREE.Group();
  const sunsetTex = buildSkyTex(THREE, [[0, '#103568'], [.28, '#164E8A'], [.4, '#2B83B8'], [.44, '#d97a46'], [.47, '#F59E42'], [.51, '#E85D56'], [.56, '#c84b62'], [1, '#1c4f78']], 0, 42, 195, (cy) => [
-  [0, cy < 228 ? 'rgba(255,212,148,.52)' : 'rgba(255,188,112,.62)'], [.5, cy < 228 ? 'rgba(235,134,108,.36)' : 'rgba(232,93,86,.45)'], [1, 'rgba(72,65,115,0)']
+  [0, rg('255,212,148', cy < 228 ? .52 : .62)], [.5, rg('235,134,108', cy < 228 ? .36 : .45)], [1, rg('72,65,115', 0)]
  ]);
- const twilightTex = buildSkyTex(THREE, [[0, '#0a071c'], [.22, '#1a1236'], [.38, '#29174d'], [.46, '#4f245e'], [.51, '#9c3b62'], [.56, '#401b4f'], [1, '#0e0b24']], 90, 26, 208, () => [
-  [0, 'rgba(195,88,125,.28)'], [1, 'rgba(30,18,62,0)']
- ]);
-
- const skyMat = new THREE.MeshBasicMaterial({ map: sunsetTex, side: THREE.BackSide, depthWrite: false, fog: false });
+ const twilightTex = buildSkyTex(THREE, [[0, '#0a071c'], [.22, '#1a1236'], [.38, '#29174d'], [.46, '#4f245e'], [.51, '#9c3b62'], [.56, '#401b4f'], [1, '#0e0b24']], 90, 26, 208, () => [[0, rg('195,88,125', .28)], [1, rg('30,18,62', 0)]]);
+ const Bas = (p) => new THREE.MeshBasicMaterial(p), Std = (p) => new THREE.MeshStandardMaterial(p);
+ const skyMat = Bas({ map: sunsetTex, side: THREE.BackSide, depthWrite: false, fog: false });
  group.add(new THREE.Mesh(new THREE.SphereGeometry(1450, 40, 28), skyMat));
 
  const sunTex = mkTex(THREE, 256, 256, (c) => {
   const g = c.createRadialGradient(128, 128, 10, 128, 128, 124);
-  [[0, 'rgba(255,252,225,.98)'], [.18, 'rgba(255,218,115,.92)'], [.42, 'rgba(245,158,66,.52)'], [.72, 'rgba(232,93,86,.18)'], [1, 'rgba(232,93,86,0)']].forEach(([s, col]) => g.addColorStop(s, col));
+  [[0, rg('255,252,225', .98)], [.18, rg('255,218,115', .92)], [.42, rg('245,158,66', .52)], [.72, rg('232,93,86', .18)], [1, rg('232,93,86', 0)]].forEach(([s, col]) => g.addColorStop(s, col));
   c.fillStyle = g; c.fillRect(0, 0, 256, 256);
  });
- const sunGlow = new THREE.Mesh(new THREE.PlaneGeometry(135, 135), new THREE.MeshBasicMaterial({ map: sunTex, transparent: true, depthWrite: false, fog: false }));
+ const sunGlow = new THREE.Mesh(new THREE.PlaneGeometry(135, 135), Bas({ map: sunTex, transparent: true, depthWrite: false, fog: false }));
  sunGlow.position.set(-165, 178, -520); sunGlow.lookAt(110, 12, 40); group.add(sunGlow);
 
  const addPlane = (w, h, mat, x, y, z, ws = 1, hs = 1) => {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h, ws, hs), mat); m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); group.add(m); return m;
  };
- addPlane(2400, 2400, new THREE.MeshStandardMaterial({ color: 0x6c7382, roughness: .85, metalness: .05 }), 0, -.06, 0);
- addPlane(WORLD_CONFIG.beachWidth + 24, 2200, new THREE.MeshStandardMaterial({ color: 0xf4e3be, roughness: .78, metalness: .04 }), WORLD_CONFIG.oceanX - WORLD_CONFIG.beachWidth * .45, .03, 0, 8, 32);
- const surf = addPlane(6.5, 2200, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 }), WORLD_CONFIG.oceanX + 1.5, .05, 0);
- addPlane(48, 2200, new THREE.MeshBasicMaterial({ color: 0x00d2de, transparent: true, opacity: .8 }), WORLD_CONFIG.oceanX + 25, .01, 0);
- const waterMat = new THREE.MeshStandardMaterial({ color: 0x0085b2, emissive: 0x033856, roughness: .18, metalness: .58, transparent: true, opacity: .96 });
+ addPlane(2400, 2400, Std({ color: 0x6c7382, roughness: .85, metalness: .05 }), 0, -.06, 0);
+ addPlane(WORLD_CONFIG.beachWidth + 24, 2200, Std({ color: 0xf4e3be, roughness: .78, metalness: .04 }), WORLD_CONFIG.oceanX - WORLD_CONFIG.beachWidth * .45, .03, 0, 8, 32);
+ const surf = addPlane(6.5, 2200, Bas({ color: 0xffffff, transparent: true, opacity: .9 }), WORLD_CONFIG.oceanX + 1.5, .05, 0);
+ addPlane(48, 2200, Bas({ color: 0x00d2de, transparent: true, opacity: .8 }), WORLD_CONFIG.oceanX + 25, .01, 0);
+ const waterMat = Std({ color: 0x0085b2, emissive: 0x033856, roughness: .18, metalness: .58, transparent: true, opacity: .96 });
  const water = addPlane(960, 2400, waterMat, WORLD_CONFIG.oceanX + 480, -.1, 0, 32, 64);
 
  const amb = new THREE.AmbientLight(0xffdfc2, .34), hemi = new THREE.HemisphereLight(0xffc994, 0x2c5278, .68);

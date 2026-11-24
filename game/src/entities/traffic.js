@@ -23,7 +23,7 @@ export function initTrafficVehicles(scene, state) {
   update(dt, colliders) {
    for (const v of vehicles) {
     if (v.isPlayerControlled && state.player.inVehicle) updatePlayerVehiclePhysics(v, state, colliders, dt);
-    else if (!v.isPolice && v.id !== 'player_car' && !v.wrecked) {
+    else if (!state.activeShot && !v.isPolice && v.id !== 'player_car' && !v.wrecked) {
      v.x += Math.sin(v.rotY) * v.speed * dt; v.z += Math.cos(v.rotY) * v.speed * dt;
      if (v.z > 420) v.z = -420; if (v.z < -420) v.z = 420;
     }
